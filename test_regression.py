@@ -176,8 +176,8 @@ y = np.array(size_arr_bub_sqr)
 
 model = LinearRegression().fit(x,y)
 print("Bubblesort (time) O(n2) fit: ", model.score(x, y))
-'''
 
+'''
 # analyse MERGESORT 
 x = np.array(time_arr_merg).reshape((-1,1))
 y = np.array(size_arr_merg)
@@ -225,3 +225,4 @@ y = np.array(size_arr_heap_sqr)
 
 model = LinearRegression().fit(x,y)
 print("Heapsort O(n2) fit: ", model.score(x, y))
+'''
