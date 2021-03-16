@@ -1,6 +1,7 @@
 import random
 import re
 import dis
+from types import TracebackType
 
 def bubbleSort(arr):
     for i in range(len(arr) - 1):
@@ -85,10 +86,9 @@ def addGlobals(varNum, string):
 def checkIndent(string):
     index = 0
     num = 0
-    while string[index] == ' ':
+    while index < len(string) and string[index] == ' ':
         index += 1
         num += 1
-
     return num
 
 def addFileSave(varNum):
@@ -128,10 +128,16 @@ def addLineVars(code):
     output += code.split('\n')[0] + '\n'
     for line in code.split('\n')[1:]:
         spaceNum = checkIndent(line)
-        if re.match(r' *else:', line) == None:
+        if re.match(r' *#', line) != None or re.fullmatch(r'\s*', line):
+            continue
+        elif re.match(r' *except ', line) != None:
+            output += (''.join([" " for _ in range(spaceNum + 4)]) + "lines_list[" + str(i) + "] += 1\n")
+            i += 1
+        elif re.match(r' *else:', line) == None:
             # output += (''.join([" " for _ in range(spaceNum)]) + "line" + str(i) + " += 1\n")
             output += (''.join([" " for _ in range(spaceNum)]) + "lines_list[" + str(i) + "] += 1\n")
             i += 1
+        
 
         output += (line + '\n')
 
@@ -148,20 +154,22 @@ def addLineVars(code):
 
 def readAlgoFromFile():
     algo = ""
-    with open("parser/mergeSort.py", 'r') as f:
+    with open("parser/codeExamples/test_file.py", 'r') as f:
         for line in f.readlines():
             algo += line
 
     return algo
 def saveEditedAlgoToFile(algo):
-    with open("parser/mergeSortEdited.py", 'w') as f:
+    with open("parser/codeExamplesEdited/test_file_edited.py", 'w') as f:
         for line in addLineVars(algo).split("\n"):
             f.write(line + "\n")
 
 
 def analyzeAlgoStack():
-    from mergeSort import mergeSort as ms
-    # dis.dis(ms)
+    # from codeExamples.mergeSort import mergeSort as ms
+    from codeExamples.test_file import mergeSort as ms
+
+    dis.dis(ms)
     it = dis.get_instructions(ms)
 
     operations_list = []
@@ -208,8 +216,12 @@ algo = readAlgoFromFile()
 saveEditedAlgoToFile(algo)
 
 # Import edited merge as a function and run it
-from mergeSortEdited import mergeSort, lines_list
+
+# from codeExamplesEdited.mergeSortEdited import mergeSort, lines_list
+from codeExamplesEdited.test_file_edited import mergeSort, lines_list
+
 array = [random.randint(-1000, 1000) for _ in range(100)]
+
 mergeSort(array)
 
 
