@@ -76,8 +76,8 @@ def bubblesort(arr):
     swap_ocurred = False
     for i in range(len(arr)):
         for j in range(len(arr)-i-1):
+            swap_counter += 1
             if arr[j+1] < arr[j]:
-                swap_counter += 1
                 swap = arr[j+1]
                 arr[j+1] = arr[j]
                 arr[j] = swap
@@ -91,7 +91,8 @@ def bubblesort(arr):
 def gen_data(algo_func, time_arr, size_arr, swap_arr):
     test_arr = []
     global swap_counter
-    for i in range(100, 2000, 50):
+    max_size = 4000
+    for i in range(1, max_size, max_size//50):
         size_arr.append(i)
         test_arr = [random.random() for _ in range(i)]
 
@@ -99,6 +100,7 @@ def gen_data(algo_func, time_arr, size_arr, swap_arr):
         algo_func(test_arr)
         time_arr.append((time()-time_b))
         swap_arr.append(swap_counter)
+    print(swap_arr)
 
 
 time_arr_lin = []
@@ -117,9 +119,9 @@ time_arr_heap = []
 size_arr_heap = []
 swap_arr_heap = []
 
-gen_data(linear_search, time_arr_lin, size_arr_lin, swap_arr_lin)
+#gen_data(linear_search, time_arr_lin, size_arr_lin, swap_arr_lin)
 gen_data(merge_sort, time_arr_merg, size_arr_merg, swap_arr_merg)
-#gen_data(bubblesort, time_arr_bub, size_arr_bub, swap_arr_bub)
+gen_data(bubblesort, time_arr_bub, size_arr_bub, swap_arr_bub)
 gen_data(heapSort, time_arr_heap, size_arr_heap, swap_arr_heap)
 
 
@@ -127,27 +129,37 @@ gen_data(heapSort, time_arr_heap, size_arr_heap, swap_arr_heap)
 #plt.plot(size_arr_lin, time_arr_lin)
 plt.show()
 fig, axs = plt.subplots(1, 1)
-axs.plot(size_arr_merg, time_arr_merg)
+axs.plot(size_arr_merg, time_arr_merg, solid_joinstyle='round')
 axs.set_title("Mergesort")
 axs.set_xlabel("Array size")
 axs.set_ylabel("Time")
+plt.grid(linestyle='--')
 plt.show()
 fig, axs = plt.subplots(1, 1)
 axs.plot(size_arr_heap, time_arr_heap)
 axs.set_title("Heapsort")
 axs.set_xlabel("Array size")
 axs.set_ylabel("Time")
+plt.grid(linestyle='--')
 plt.show()
 
-'''
-fig, axs = plt.subplots(2, 1)
-axs[0].plot(size_arr_heap, time_arr_heap)
-axs[0].set_title("Bubblesort")
+fig, axs = plt.subplots(1, 1)
+fig.suptitle("Bubblesort: Time-size", fontsize=18)
+axs.plot(size_arr_bub, time_arr_bub)
 axs.set_xlabel("Array size")
 axs.set_ylabel("Time")
+plt.grid(linestyle='--')
+plt.show()
+
+fig, axs = plt.subplots(1, 1)
+axs.plot(size_arr_bub, swap_arr_bub)
+axs.set_title("Bubblesort: Comparisons-size")
+axs.set_xlabel("Array size")
+axs.set_ylabel("No. comparisons")
+plt.grid(linestyle='--')
+plt.show()
 #plt.plot(size_arr_bub, time_arr_bub)
 #plt.plot(size_arr_bub, swap_arr_bub)
-'''
 '''
 # analyse
 x = np.array(time_arr_lin).reshape((-1,1))
@@ -163,12 +175,13 @@ y = np.array(size_arr_bub)
 model = LinearRegression().fit(x,y)
 print("Bubblesort (time) O(n) fit: ", model.score(x, y))
 # analyse
-size_arr_bub_log = [i**2 for i in size_arr_bub]
+size_arr_bub_log = [i*math.log(i) for i in size_arr_bub]
 x = np.array(time_arr_bub).reshape((-1,1))
 y = np.array(size_arr_bub_log)
 
 model = LinearRegression().fit(x,y)
 print("Bubblesort (time) O(nlogn) fit: ", model.score(x, y))
+
 # analyse
 size_arr_bub_sqr = [i**2 for i in size_arr_bub]
 x = np.array(time_arr_bub).reshape((-1,1))
@@ -177,7 +190,30 @@ y = np.array(size_arr_bub_sqr)
 model = LinearRegression().fit(x,y)
 print("Bubblesort (time) O(n2) fit: ", model.score(x, y))
 
+<<<<<<< HEAD:test_regression.py
 '''
+=======
+# ANALYSE COMPARISONS
+x = np.array(swap_arr_bub).reshape((-1, 1))
+y = np.array(size_arr_bub)
+
+model = LinearRegression().fit(x,y)
+print("Bubblesort (Comparisons) O(n) fit: ", model.score(x, y))
+# analyse
+x = np.array(swap_arr_bub).reshape((-1,1))
+y = np.array(size_arr_bub_log)
+
+model = LinearRegression().fit(x,y)
+print("Bubblesort (Comparisons) O(nlogn) fit: ", model.score(x, y))
+
+# analyse
+x = np.array(swap_arr_bub).reshape((-1,1))
+y = np.array(size_arr_bub_sqr)
+
+model = LinearRegression().fit(x,y)
+print("Bubblesort (Comparisons) O(n2) fit: ", model.score(x, y))
+# ____________________________________________________________________
+>>>>>>> Prettify graphs for raport.:data_analysis/test_regression.py
 # analyse MERGESORT 
 x = np.array(time_arr_merg).reshape((-1,1))
 y = np.array(size_arr_merg)
