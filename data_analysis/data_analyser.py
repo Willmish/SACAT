@@ -1,96 +1,125 @@
+# Written by Szymon Duchniewicz March, 2021
+'''
+DataAnalyser class encapsulates all methods used for the estimation of time complexity based on 
+data passed to it.
+
+To analyse data, create an instance of DataAnalyser and pass it dependant data (running time/operation counts) 
+and array sizes. Then call get_most_likely_complexity() method. Optionally, call plot_data() to display the 
+current best-fit complexity and its curve. (note that DEBUG_MODE constant must be set to true in order for
+plot_data() method to work.)
+
+'''
 # Take input data (times and array sizes, op count and array sizes, etc.)
 # Find best fit complexity with regression (?) {TODO RESEARCH IF A BETTER OPTION EXISTS)
 # Use curve fitting (?) TODO CHECK IF BETTER OPTION EXISTS to find approximate equation for the complexity
 # Display scatter graph of data and assumed graph along with its complexity
+from typing import List, Tuple
 from test_regression import gen_data_return, swap_counter, merge_sort, heapSort, bubblesort
-import math
-import matplotlib.pyplot as plt
+
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from scipy.optimize import curve_fit
+
+
 DEBUG_MODE = True
+if DEBUG_MODE:
+    # optional imports used for debugging (necessary for plot_data() method)
+    import math
+    import matplotlib.pyplot as plt
 
 if DEBUG_MODE:
     print("Welcome!")
 
-def quadratic_objective(x, a, b, c):
-    return a * x*x + b * x + c
+class DataAnalyser:
+    def __init__(self, data: List = [], sizes: List = []):
+        self.complexity: str = ""
+        self.data: List = data
+        self.sizes: List = sizes
 
-def score_on_data(data, sizes):
-    x = np.array(sizes).reshape((-1,1))
-    y = np.array(data)
-    model = LinearRegression().fit(x, y)
-    return model.score(x, y), model
+    def set_data(self, new_data: List):
+        self.data = new_data
 
-def get_most_likely_complexity(data, sizes):
-    # Returns the most likely complexity (a string) and predicted datapoints
-    # For now up to cubic, TODO check if possible to automatically do above cubic
-    complexities = [] # stores tuples of (complexity, (fitness, model))
-    if DEBUG_MODE:
-        print("Begin complexity analysis!")
+    def set_sizes(self, new_sizes: List):
+        self.sizes = new_sizes
 
-    # linear
-    complexities.append((("n", score_on_data(data, sizes))))
-    if DEBUG_MODE:
-        print("Linear tested!")
+    def quadratic_objective(x, a, b, c):
+        return a * x*x + b * x + c
 
-    # logarithmic 
-    log_sizes = [math.log(i, 10) for i in sizes]
-    complexities.append(("logn", score_on_data(data, log_sizes)))
-    if DEBUG_MODE:
-        print("logarithmic tested!")
+    def score_on_data(data, sizes):
+        x = np.array(sizes).reshape((-1,1))
+        y = np.array(data)
+        model = LinearRegression().fit(x, y)
+        return model.score(x, y), model
 
-    # Polylogarithmic? (log n)^k
+    def get_most_likely_complexity(data, sizes):
+        # Returns the most likely complexity (a string) and predicted datapoints
+        # For now up to cubic, TODO check if possible to automatically do above cubic
+        complexities = [] # stores tuples of (complexity, (fitness, model))
+        if DEBUG_MODE:
+            print("Begin complexity analysis!")
 
-    # linearithmic 
-    linlog_sizes = [i*math.log(i, 10) for i in sizes]
-    complexities.append(("nlogn", score_on_data(data, linlog_sizes)))
-    if DEBUG_MODE:
-        print("linearithmic tested!")
+        # linear
+        complexities.append((("n", score_on_data(data, sizes))))
+        if DEBUG_MODE:
+            print("Linear tested!")
 
-    # quasilinear? n (log n)^k
+        # logarithmic 
+        log_sizes = [math.log(i, 10) for i in sizes]
+        complexities.append(("logn", score_on_data(data, log_sizes)))
+        if DEBUG_MODE:
+            print("logarithmic tested!")
 
-    # quadratic
-    quadratic_sizes = [i*i for i in sizes]
-    complexities.append(("n2", score_on_data(data, quadratic_sizes)))
-    if DEBUG_MODE:
-        print("quadratic tested!")
+        # Polylogarithmic? (log n)^k
 
-    # cubic 
-    cubic_sizes = [i**3 for i in sizes]
-    complexities.append(("n3", score_on_data(data, cubic_sizes)))
-    if DEBUG_MODE:
-        print("cubic tested!")
+        # linearithmic 
+        linlog_sizes = [i*math.log(i, 10) for i in sizes]
+        complexities.append(("nlogn", score_on_data(data, linlog_sizes)))
+        if DEBUG_MODE:
+            print("linearithmic tested!")
 
-    # Others? (factorial? non polynomial?)
-    
-    # Sort according to models score descending order
-    complexities = sorted(complexities, key=lambda x: x[1][0], reverse=True)
-    if DEBUG_MODE:
-        print(complexities)
-    
-    if complexities[0][0] == "n2":
-        predicted_data = complexities[0][1][1].predict(np.array(quadratic_sizes).reshape(-1,1))
-        popt, _ = curve_fit(quadratic_objective, sizes, predicted_data)
-        a, b, c = popt
-        print(a, "n2 + ", b, "n + ", c)
-        plot_data(predicted_data, data, sizes, "n2", popt)
+        # quasilinear? n (log n)^k
 
-def plot_data(predicted_data, data, sizes, complexity, parameters):
-    fig, axs = plt.subplots(1, 1)
-    fig.suptitle("Bubblesort: Time-size", fontsize=18)
-    axs.scatter(sizes, data, s=10, color="green")
-    axs.set_xlabel("Array size")
-    axs.set_ylabel("Time")
-    plt.grid(linestyle='--')
-    plt.plot(sizes, predicted_data, label="O(n2) predicted")
+        # quadratic
+        quadratic_sizes = [i*i for i in sizes]
+        complexities.append(("n2", score_on_data(data, quadratic_sizes)))
+        if DEBUG_MODE:
+            print("quadratic tested!")
 
-    if complexity == "n2": # TODO add other complexities
-        a, b, c = parameters 
-        new_y = [quadratic_objective(i, a, b ,c) for i in sizes]
-    plt.plot(sizes, new_y, label="O(n2) fitted")
-    plt.legend()
-    plt.show()
+        # cubic 
+        cubic_sizes = [i**3 for i in sizes]
+        complexities.append(("n3", score_on_data(data, cubic_sizes)))
+        if DEBUG_MODE:
+            print("cubic tested!")
+
+        # Others? (factorial? non polynomial?)
+        
+        # Sort according to models score descending order
+        complexities = sorted(complexities, key=lambda x: x[1][0], reverse=True)
+        if DEBUG_MODE:
+            print(complexities)
+        
+        if complexities[0][0] == "n2":
+            predicted_data = complexities[0][1][1].predict(np.array(quadratic_sizes).reshape(-1,1))
+            popt, _ = curve_fit(quadratic_objective, sizes, predicted_data)
+            a, b, c = popt
+            print(a, "n2 + ", b, "n + ", c)
+            plot_data(predicted_data, data, sizes, "n2", popt)
+
+    def plot_data(predicted_data, data, sizes, complexity, parameters):
+        fig, axs = plt.subplots(1, 1)
+        fig.suptitle("Bubblesort: Time-size", fontsize=18)
+        axs.scatter(sizes, data, s=10, color="green")
+        axs.set_xlabel("Array size")
+        axs.set_ylabel("Time")
+        plt.grid(linestyle='--')
+        plt.plot(sizes, predicted_data, label="O(n2) predicted")
+
+        if complexity == "n2": # TODO add other complexities
+            a, b, c = parameters 
+            new_y = [quadratic_objective(i, a, b ,c) for i in sizes]
+        plt.plot(sizes, new_y, label="O(n2) fitted")
+        plt.legend()
+        plt.show()
 
 time_arr, size_arr, swap_arr = gen_data_return(bubblesort, 4000, 50)
 
