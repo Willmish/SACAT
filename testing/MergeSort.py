@@ -1,3 +1,8 @@
+"""
+A merge sort implementation
+
+Written by Tim
+"""
 def merge(lst1, lst2, compare):
   merged_list = []
   index1 = 0

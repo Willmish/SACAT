@@ -4,42 +4,14 @@ and use the method .run(your_sorting_algorithm). This method will return a strin
 but the return type can be modified for integration into the final program.
 
 Note: exception handling is left to the run environment.
+
+Written by Tim
 """
 import random
 import timeit
 import MergeSort
 import FakeSort
-
-class ListGenerator:
-  def __init__(self,min_value=-1000000, max_value=1000000, size=100):
-    self.__min_value = min_value
-    self.__max_value = max_value
-    self.__size = size
-
-  # generate a list with random integers
-  def random_lst(self):
-    lst = [(random.randint(self.__min_value,self.__max_value)) for i in range(self.__size)]
-    return lst
-
-  # generate a sorted list of integers
-  def sorted_lst(self):
-    lst = [i for i in range(self.__size)]
-    return lst
-
-  # generate a reverse sorted list of integers
-  def reversed_lst(self):
-    lst = [i for i in range(self.__size, 0, -1)]
-    return lst
-
-  # generate a list of 1s
-  def equal_lst(self):
-    lst = [1 for i in range(self.__size)]
-    return lst
-  
-  # generate a random list of odd length
-  def odd_len_lst(self):
-    lst = [(random.randint(self.__min_value,self.__max_value)) for i in range(self.__size-1)]
-    return lst
+from data_generator import ListGenerator
 
 class PreTest:
   def __init__(self):
