@@ -8,6 +8,7 @@
 # print(py_compile.compile("test.py"))
 
 import dis
+from types import CodeType
 
 def a(x, y):
     for _ in range(10):
@@ -50,29 +51,38 @@ def mul(x, y):\n\
 "
 
 def mul(x, y):
-    a = 23
-    b = 123
-    L = [1,2,3,4,5,6,7]
-    abc = [x for x in range(len(L))]
-    return a + 1
+    a = [1,2,3]
+    def abc():
+        print(1)
+    abc()
+    return a
 
-    
 
-it = dis.get_instructions(mergeSort)
-# dis.dis(mergeSort)
+it = dis.get_instructions(mul)
+
+dis.dis(mul)
 # for i in it:
 #     print(i)
 
-operations_list = []
 
-line_index = -1
+import types 
+print("LOL")
 for i in it:
-    if i.starts_line is not None:
-        operations_list.append([])
-        line_index += 1
-    operations_list[line_index].append(i.opcode)
+    if type(i.argval) == types.CodeType:
+        dis.dis(i.argval)
+        it = dis.get_instructions(i.argval)
+        for i in it:
+            print(i)
+# operations_list = []
+
+# line_index = -1
+# for i in it:
+#     if i.starts_line is not None:
+#         operations_list.append([])
+#         line_index += 1
+#     operations_list[line_index].append(i.opcode)
 
 
-for i in range(len(operations_list)):
-    print(i, operations_list[i])
+# for i in range(len(operations_list)):
+#     print(i, operations_list[i])
 

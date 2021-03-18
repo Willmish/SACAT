@@ -1,6 +1,6 @@
 import random
 import re
-import dis
+import dis, types
 from types import TracebackType
 
 def bubbleSort(arr):
@@ -69,87 +69,45 @@ def mergeSort(arr):\n\
     return arr\n\
 mergeSort(array)"
 
-
-def addGlobals(varNum, string):
-    output = ''
-    for line in string.split('\n'):
-        output += line + "\n"
-        if re.match(r' *def ', line) != None:
-            spaceNum = checkIndent(line)
-            for x in range(varNum):
-                output += (''.join([" " for _ in range(spaceNum + 4)]) + "global line" + str(x)+ "\n")
-    return output
-
-
-
-
 def checkIndent(string):
     index = 0
-    num = 0
     while index < len(string) and string[index] == ' ':
         index += 1
-        num += 1
-    return num
+    return index
 
-def addFileSave(varNum):
-    output = 'with open("log.txt", "a+") as f:\n'
-    # for index in range(varNum):
-        # output += "    f.write(str(line" + str(index) + ")+ '\\n')\n"
-        
-        # output += "    f.write('\\n')\n"
-    # output += "    f.write(str(list) + '\\n')\n"
-    output += "    f.write(str(len(array)) + ';')\n"
-    output += "    f.write(str(sum(lines_list)) + '\\n')\n"
-    
-
-
-    return output
-
-
-def addInits(varNum):
+def addInits(keyList):
     inits = ''
     # for x in range(varNum):
     #     inits += ("line" + str(x) + " = 0\n")
-    inits += "lines_list = [0 for x in range(" + str(varNum) + ")]\n"
+    inits += "lines_dict = {n : 0 for n in " + str(keyList) + "}\n"
+    # inits += "lines_list = [0 for x in range(" + str(varNum) + ")]\n"
     return inits
-
-def addEndings(varNum):
-    endings = ''
-    # for x in range(varNum):
-    #     endings += ("print(" +'"line'+str(x)+' =",' + "line" + str(x) + ")" + "\n")
-    endings += "print(lines_list)\n"
-    endings += "print('operations count:', sum(lines_list))\n"
-    return endings
-        
 
 def addLineVars(code):
     output = ""
-    i = 0
+    lineNum = 1
+    keysList = []
     output += code.split('\n')[0] + '\n'
     for line in code.split('\n')[1:]:
+        lineNum += 1
+
         spaceNum = checkIndent(line)
-        if re.match(r' *#', line) != None or re.fullmatch(r'\s*', line):
+        if re.match(r'\s*#', line) != None or re.fullmatch(r'\s*', line):
+            output += (line + '\n')
             continue
-        elif re.match(r' *except ', line) != None:
-            output += (''.join([" " for _ in range(spaceNum + 4)]) + "lines_list[" + str(i) + "] += 1\n")
-            i += 1
-        elif re.match(r' *else:', line) == None:
-            # output += (''.join([" " for _ in range(spaceNum)]) + "line" + str(i) + " += 1\n")
-            output += (''.join([" " for _ in range(spaceNum)]) + "lines_list[" + str(i) + "] += 1\n")
-            i += 1
-        
+        elif re.match(r'\s*except ', line) != None:
+            output += (line + '\n')
+            output += (''.join([" " for _ in range(spaceNum + 4)]) + "lines_dict[" + str(lineNum) + "] += 1\n")
+            keysList.append(lineNum)
+        elif re.match(r' *else:', line) != None:
+            output += (line + '\n')
+        else:
+            output += (''.join([" " for _ in range(spaceNum)]) + "lines_dict[" + str(lineNum) + "] += 1\n")
+            output += (line + '\n')
+            keysList.append(lineNum)
 
-        output += (line + '\n')
-
-    output = addInits(i) + output
-    # output += addEndings(i)
-    # output += addFileSave(i)
-    # output = addGlobals(i, output)
+    output = addInits(keysList) + output
     return output
-
-
-
-
 
 
 def readAlgoFromFile():
@@ -159,9 +117,15 @@ def readAlgoFromFile():
             algo += line
 
     return algo
+    
 def saveEditedAlgoToFile(algo):
     with open("parser/codeExamplesEdited/test_file_edited.py", 'w') as f:
         for line in addLineVars(algo).split("\n"):
+            f.write(line + "\n")
+
+def saveAlgoToFile(algo):
+    with open("parser/codeExamplesEdited/test_file_edited.py", 'w') as f:
+        for line in algo.split("\n"):
             f.write(line + "\n")
 
 
@@ -169,40 +133,48 @@ def analyzeAlgoStack():
     # from codeExamples.mergeSort import mergeSort as ms
     from codeExamples.test_file import mergeSort as ms
 
-    dis.dis(ms)
-    it = dis.get_instructions(ms)
-
-    operations_list = []
-
-    line_index = -1
-    for i in it:
-        if i.starts_line is not None:
-            operations_list.append([])
-            line_index += 1
-        operations_list[line_index].append(i.opcode)
-
-
-    # for i in range(len(operations_list)):
-    #     print(i, operations_list[i])
-
-    return operations_list
-
-
-
-
-def countStackOperations(lines_list, op_list):
-    if len(lines_list) is not len(op_list): 
-        raise Exception("Wrong size of input lists")
-
     operations_dict = {}
-    for i in range(len(lines_list)):
-        for entry in op_list[i]:
-            if entry not in operations_dict:
-                operations_dict[entry] = lines_list[i]
+
+    def analyzeCodeObject(codeObj, depth = 0):
+        if depth < 0:
+            return 
+
+        # dis.dis(codeObj) # DEBUG
+        it = dis.get_instructions(codeObj)
+
+        line_index = -1
+        for i in it:
+            if type(i.argval) == types.CodeType: # If current instruction calls other code object, decent recursively
+                analyzeCodeObject(i.argval, depth - 1)
+
+            if i.starts_line is not None:
+                operations_dict[i.starts_line] = []
+                line_index = i.starts_line
+
+            operations_dict[line_index].append(i.opcode)
+
+    analyzeCodeObject(ms, 1) # Analyze code with depth 1
+    return operations_dict
+
+
+
+
+def countStackOperationsDict(lines_dict, op_dict):
+    # if len(lines_dict) is not len(op_dict): 
+    #     raise Exception("Wrong size of input lists")
+    # print(lines_dict)
+    operations_dict = {}
+    for key in op_dict:
+        # print(key)
+        for op in op_dict[key]:
+            if op not in operations_dict:
+                operations_dict[op] = lines_dict[key]
             else:
-                operations_dict[entry] += lines_list[i]
+                operations_dict[op] += lines_dict[key]
 
     return operations_dict
+
+
 
 
 
@@ -210,24 +182,37 @@ def countStackOperations(lines_list, op_list):
 operation_list = analyzeAlgoStack() 
 
 # Read algo as a string
-algo = readAlgoFromFile()
+
+# algo = readAlgoFromFile()
+from Parser import Parser
+p = Parser()
+fileFrom = "parser/codeExamples/test_file.py"
+fileTo = "parser/codeExamplesEdited/test_file_edited.py"
+
+p.parseCode(fileFrom, fileTo)
+
+# saveAlgoToFile(algo_parsed)
+
+
 
 # Edit it by adding line counts and save to the file
-saveEditedAlgoToFile(algo)
+# saveEditedAlgoToFile(algo)
 
 # Import edited merge as a function and run it
 
 # from codeExamplesEdited.mergeSortEdited import mergeSort, lines_list
-from codeExamplesEdited.test_file_edited import mergeSort, lines_list
+from codeExamplesEdited.test_file_edited import mergeSort, lines_dict
 
 array = [random.randint(-1000, 1000) for _ in range(100)]
 
 mergeSort(array)
 
-
 # Generate dictionary of execution numbers for each stack operation
-dictionary = countStackOperations(lines_list, operation_list)
-
+dictionary = countStackOperationsDict(lines_dict, operation_list)
+print(lines_dict)
+print(operation_list)
 for key in dictionary.keys():
     print(dictionary[key], dis.opname[key], "code:", key)
 
+# import py_compile
+# print(py_compile.compile("./parser/tests.py"))
