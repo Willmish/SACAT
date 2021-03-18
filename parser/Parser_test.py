@@ -1,8 +1,9 @@
 from Parser import Parser
 
-fileFrom = "parser/experiments/codeExamples/test_file.py"
-fileTo = "parser/experiments/codeExamplesEdited/test_file_edited.py"
+fileFrom = "parser/res/input/test_file.py"
+fileTo = "parser/res/output/test_file_edited.py"
 
 
-p = Parser()
-p.parseCode(fileFrom, fileTo)
+if __name__ == '__main__':
+    p = Parser()
+    p.parseCode(fileFrom, fileTo)
