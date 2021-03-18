@@ -15,6 +15,7 @@ plot_data() method to work.)
 # Display scatter graph of data and assumed graph along with its complexity
 from typing import List, Tuple
 from test_regression import gen_data_return, swap_counter, merge_sort, heapSort, bubblesort
+from objective_functions import ObjectiveFunctions
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -35,6 +36,7 @@ class DataAnalyser:
         self.complexity: str = ""
         self.data: List = data
         self.sizes: List = sizes
+        self.complexiites: List[Tuple] = []
 
     def set_data(self, new_data: List):
         self.data = new_data
@@ -42,88 +44,88 @@ class DataAnalyser:
     def set_sizes(self, new_sizes: List):
         self.sizes = new_sizes
 
-    def quadratic_objective(x, a, b, c):
-        return a * x*x + b * x + c
-
-    def score_on_data(data, sizes):
+    def score_on_data(self, data, sizes):
         x = np.array(sizes).reshape((-1,1))
         y = np.array(data)
         model = LinearRegression().fit(x, y)
         return model.score(x, y), model
 
-    def get_most_likely_complexity(data, sizes):
+    def get_most_likely_complexity(self):
         # Returns the most likely complexity (a string) and predicted datapoints
         # For now up to cubic, TODO check if possible to automatically do above cubic
-        complexities = [] # stores tuples of (complexity, (fitness, model))
+        self.complexities = [] # stores tuples of (complexity, (fitness, model))
         if DEBUG_MODE:
             print("Begin complexity analysis!")
 
         # linear
-        complexities.append((("n", score_on_data(data, sizes))))
+        self.complexities.append((("n", self.score_on_data(self.data, self.sizes))))
         if DEBUG_MODE:
             print("Linear tested!")
 
         # logarithmic 
-        log_sizes = [math.log(i, 10) for i in sizes]
-        complexities.append(("logn", score_on_data(data, log_sizes)))
+        log_sizes = [math.log(i, 10) for i in self.sizes]
+        self.complexities.append(("logn", self.score_on_data(self.data, log_sizes)))
         if DEBUG_MODE:
             print("logarithmic tested!")
 
         # Polylogarithmic? (log n)^k
 
         # linearithmic 
-        linlog_sizes = [i*math.log(i, 10) for i in sizes]
-        complexities.append(("nlogn", score_on_data(data, linlog_sizes)))
+        linlog_sizes = [i*math.log(i, 10) for i in self.sizes]
+        self.complexities.append(("nlogn", self.score_on_data(self.data, linlog_sizes)))
         if DEBUG_MODE:
             print("linearithmic tested!")
 
         # quasilinear? n (log n)^k
 
         # quadratic
-        quadratic_sizes = [i*i for i in sizes]
-        complexities.append(("n2", score_on_data(data, quadratic_sizes)))
+        quadratic_sizes = [i*i for i in self.sizes]
+        self.complexities.append(("n2", self.score_on_data(self.data, quadratic_sizes)))
         if DEBUG_MODE:
             print("quadratic tested!")
 
         # cubic 
-        cubic_sizes = [i**3 for i in sizes]
-        complexities.append(("n3", score_on_data(data, cubic_sizes)))
+        cubic_sizes = [i**3 for i in self.sizes]
+        self.complexities.append(("n3", self.score_on_data(self.data, cubic_sizes)))
         if DEBUG_MODE:
             print("cubic tested!")
 
         # Others? (factorial? non polynomial?)
         
         # Sort according to models score descending order
-        complexities = sorted(complexities, key=lambda x: x[1][0], reverse=True)
+        self.complexities = sorted(self.complexities, key=lambda x: x[1][0], reverse=True)
         if DEBUG_MODE:
-            print(complexities)
+            print(self.complexities)
         
-        if complexities[0][0] == "n2":
-            predicted_data = complexities[0][1][1].predict(np.array(quadratic_sizes).reshape(-1,1))
-            popt, _ = curve_fit(quadratic_objective, sizes, predicted_data)
+        if self.complexities[0][0] == "n2":
+            predicted_data = self.complexities[0][1][1].predict(np.array(quadratic_sizes).reshape(-1,1))
+            popt, _ = curve_fit(ObjectiveFunctions.quadratic_objective, self.sizes, predicted_data)
             a, b, c = popt
             print(a, "n2 + ", b, "n + ", c)
-            plot_data(predicted_data, data, sizes, "n2", popt)
+            self.plot_data(predicted_data, self.data, self.sizes, "n2", popt)
 
-    def plot_data(predicted_data, data, sizes, complexity, parameters):
+    def plot_data(self, predicted_data, data, sizes, complexity, parameters):
         fig, axs = plt.subplots(1, 1)
-        fig.suptitle("Bubblesort: Time-size", fontsize=18)
+        fig.suptitle("Bubblesort", fontsize=18)
         axs.scatter(sizes, data, s=10, color="green")
         axs.set_xlabel("Array size")
-        axs.set_ylabel("Time")
+        axs.set_ylabel("Dependant")
         plt.grid(linestyle='--')
         plt.plot(sizes, predicted_data, label="O(n2) predicted")
 
         if complexity == "n2": # TODO add other complexities
             a, b, c = parameters 
-            new_y = [quadratic_objective(i, a, b ,c) for i in sizes]
+            new_y = [ObjectiveFunctions.quadratic_objective(i, a, b ,c) for i in sizes]
         plt.plot(sizes, new_y, label="O(n2) fitted")
         plt.legend()
         plt.show()
 
-time_arr, size_arr, swap_arr = gen_data_return(bubblesort, 4000, 50)
+if __name__ == "__main__":
+    time_arr, size_arr, swap_arr = gen_data_return(bubblesort, 1000, 10)
+    data_analyser = DataAnalyser(time_arr, size_arr)
 
-get_most_likely_complexity(time_arr, size_arr)
+    data_analyser.get_most_likely_complexity()
 
-get_most_likely_complexity(swap_arr, size_arr)
+    data_analyser.set_data(swap_arr)
+    data_analyser.get_most_likely_complexity()
 
