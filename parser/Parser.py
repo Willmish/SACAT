@@ -1,3 +1,7 @@
+from Settings import safety_restricted_funcs
+from Settings import other_restricted_funcs
+from Settings import safety_restricted_keywords
+
 import re
 
 class Parser:
@@ -7,6 +11,23 @@ class Parser:
 
         self.__keyList = []
         self.__inits = ""
+    
+    def __checkForRestricted(self):
+        restricted_funcs = safety_restricted_funcs + other_restricted_funcs
+
+        for line in self.__input_code.split('\n'):
+            for elem in restricted_funcs:
+                if re.match(r'[^A-Za-z0-9_]*' + elem + r'\s*\([^A-Za-z0-9_]*', line):
+                    # print("Usage of a restricted element", elem)
+                    return False
+
+            for elem in safety_restricted_keywords:
+                if re.match(r'[^A-Za-z0-9_]*' + elem + r'[^A-Za-z0-9_]*', line):
+                    # print("User cannot import any packages")
+                    return False
+
+        return True
+                
 
     def __checkIndent(self, string):
         ''' returns a number of spaces before a line '''
@@ -54,6 +75,9 @@ class Parser:
     def parseCode(self, fileFrom, fileTo):
         ''' reads input, build output and saves output '''
         self.__input_code = self.__readAlgoFromFile(fileFrom)
+
+        if not self.__checkForRestricted():
+            raise Exception("User code contains restricted functions/keywords.")
 
         self.__addLineVars()
         self.__addInit()
