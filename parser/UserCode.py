@@ -13,10 +13,6 @@ class UserCode:
     @property
     def code(self):
         return self.__code
-    
-    @code.getter
-    def code(self):
-        return self.__code
 
     @staticmethod
     def __readAlgoFromFile(filename):
@@ -33,17 +29,8 @@ class UserCode:
         for line in self.__code.split('\n'):
             for elem in restricted_funcs:
                 if re.match(r'[^A-Za-z0-9_]*' + elem + r'\s*\([^A-Za-z0-9_]*', line):
-                    # print("Usage of a restricted element", elem)
                     raise RestrictedCodeError("User code contains restricted function", elem)
-                    # return False
 
             for elem in safety_restricted_keywords:
                 if re.match(r'[^A-Za-z0-9_]*' + elem + r'[^A-Za-z0-9_]*', line):
-                    # print("User cannot import any packages")
                     raise RestrictedCodeError("User code contains restricted keyword", elem)
-                    # return False
-        # return True
-
-# cd = UserCode()
-# cd.code = './parser/res/input/test_file.py'
-# print(cd.checkForRestricted())
