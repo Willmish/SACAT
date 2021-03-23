@@ -11,20 +11,21 @@ import random
 import timeit
 import MergeSort
 import FakeSort
+from test_super import SortTest
 from data_generator import ListGenerator
 
-class PreTest:
+class PreTest(SortTest):
   def __init__(self):
-    self.__lstgen = ListGenerator()
+    self._lstgen = ListGenerator()
     self.__tests = [
-      self.__lstgen.random_lst(),    # random list
-      [],                          # empty list
-      self.__lstgen.sorted_lst(),    # sorted list
-      self.__lstgen.reversed_lst(),  # reversed list
-      self.__lstgen.equal_lst(),     # equal elements list
-      self.__lstgen.odd_len_lst()    # list of odd length
+      self._lstgen.random_lst(),    # random list
+      [],                           # empty list
+      self._lstgen.sorted_lst(),    # sorted list
+      self._lstgen.reversed_lst(),  # reversed list
+      self._lstgen.equal_lst(),     # equal elements list
+      self._lstgen.odd_len_lst()    # list of odd length
     ]
-    self.__test_names = [
+    self._test_names = [
       "random list",
       "empty list",
       "sorted list",
@@ -32,25 +33,17 @@ class PreTest:
       "list of equal elements",
       "random list of odd length",
     ]
-  
-  # run the sort algorithm on a list and time it
-  def __single_test(self, my_sort, lst):
-    starttime = timeit.default_timer()
-    outputs = my_sort(lst)
-    endtime = timeit.default_timer()
-    run_time = round(endtime-starttime,4)
-    return outputs, run_time
 
   # run all tests from self.tests, return processed
   # (hopefully sorted) lists and total time needed
   def __all_tests(self,my_sort):
     results = []
-    total_time = 0
+    times = []
     for lst in self.__tests:
-      sorted_lst, time = self.__single_test(my_sort,lst)
-      results.append(self.__is_sorted(sorted_lst, lst))
-      total_time += time
-    return results, total_time
+      sorted_lst, time = self._single_test(my_sort,lst)
+      results.append(self._is_sorted(sorted_lst, lst))
+      times.append(time)
+    return results, times
 
   # check whether the processed lists are sorted,
   # return a list of booleans where true stands for sorted
@@ -58,17 +51,13 @@ class PreTest:
     failed = []
     for i in range(len(results)):
       if not results[i]:
-        failed.append(self.__test_names[i])
+        failed.append(self._test_names[i])
     return failed
-  
-  # check whether a processed list is the sorted version
-  # of another list
-  def __is_sorted(self, sorted_lst, lst): 
-    return sorted_lst == sorted(lst)
   
   # main method: run tests on a sort algorithm my_sort
   def run(self, my_sort):
-    results, run_time = self.__all_tests(my_sort)
+    results, times = self.__all_tests(my_sort)
+    run_time = round(sum(times),4)
     failed = self.__check_results(results)
     if len(failed) == 0:
       return f"passed all tests in {run_time} s"
