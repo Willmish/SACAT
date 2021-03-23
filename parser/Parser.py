@@ -1,7 +1,3 @@
-from Settings import safety_restricted_funcs
-from Settings import other_restricted_funcs
-from Settings import safety_restricted_keywords
-
 import re
 
 class Parser:
@@ -10,24 +6,7 @@ class Parser:
         self.__input_code = ""
 
         self.__keyList = []
-        self.__inits = ""
-    
-    def __checkForRestricted(self):
-        restricted_funcs = safety_restricted_funcs + other_restricted_funcs
-
-        for line in self.__input_code.split('\n'):
-            for elem in restricted_funcs:
-                if re.match(r'[^A-Za-z0-9_]*' + elem + r'\s*\([^A-Za-z0-9_]*', line):
-                    # print("Usage of a restricted element", elem)
-                    return False
-
-            for elem in safety_restricted_keywords:
-                if re.match(r'[^A-Za-z0-9_]*' + elem + r'[^A-Za-z0-9_]*', line):
-                    # print("User cannot import any packages")
-                    return False
-
-        return True
-                
+        self.__inits = ""                      
 
     def __checkIndent(self, string):
         ''' returns a number of spaces before a line '''
@@ -60,24 +39,15 @@ class Parser:
                 self.__output_code += (line + '\n')
                 self.__keyList.append(lineNum)
 
-    def __readAlgoFromFile(self, filename):
-        algo = ""
-        with open(filename, 'r') as f:
-            for line in f.readlines():
-                algo += line
-        return algo
-
     def __saveAlgoToFile(self, output, filename):
         with open(filename, 'w') as f:
             for line in output.split("\n"):
                 f.write(line + "\n")
 
-    def parseCode(self, fileFrom, fileTo):
+    def parseCode(self, userCode, fileTo):
         ''' reads input, build output and saves output '''
-        self.__input_code = self.__readAlgoFromFile(fileFrom)
-
-        if not self.__checkForRestricted():
-            raise Exception("User code contains restricted functions/keywords.")
+        # self.__input_code = self.__readAlgoFromFile(fileFrom)
+        self.__input_code = userCode.code
 
         self.__addLineVars()
         self.__addInit()
