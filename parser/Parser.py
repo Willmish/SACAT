@@ -1,3 +1,4 @@
+from os import stat
 import re
 
 class Parser:
@@ -8,7 +9,8 @@ class Parser:
         self.__keyList = []
         self.__inits = ""                      
 
-    def __checkIndent(self, string):
+    @staticmethod
+    def __checkIndent(string):
         ''' returns a number of spaces before a line '''
         index = 0
         while index < len(string) and string[index] == ' ':
@@ -39,7 +41,8 @@ class Parser:
                 self.__output_code += (line + '\n')
                 self.__keyList.append(lineNum)
 
-    def __saveAlgoToFile(self, output, filename):
+    @staticmethod
+    def __saveAlgoToFile(output, filename):
         with open(filename, 'w') as f:
             for line in output.split("\n"):
                 f.write(line + "\n")

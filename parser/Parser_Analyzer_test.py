@@ -8,7 +8,7 @@ if __name__ == '__main__':
     uc = UserCode(fileFrom)
     # check if the code contains restricted stuff
     uc.checkForRestricted()
-    
+
     # create Parser obj
     p = Parser()
     # parse code and store it in fileTo
@@ -17,6 +17,12 @@ if __name__ == '__main__':
     # create Analyzer obj
     a = Analyzer()
     # analyze code (instead of reading files analyzer imports them)
-    a.analyze((fileFrom, pathFrom, fileTo, pathTo))
-    # tmp func just for showing results in terminal
+    a.generate_operations_table(fileFrom)
+    print(a.operations_table)
+    a.initModules(fileFrom, fileTo)
+    a.executeAlgorithm()
+    a.analyze()
     a.showAnalysisResults()
+    # tmp func just for showing results in terminal
+    # a.test_analyze((fileFrom, fileTo))
+    # a.showAnalysisResults()

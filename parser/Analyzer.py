@@ -5,22 +5,32 @@ from Settings import DEBUG
 
 class Analyzer:
     def __init__(self):
-        self.__stack_operations = {} # Key - line number. Value - list of op codes
+        self.__operations_table = {} # Key - line number. Value - list of op codes
         self.__lines_execution = {} # Key - line number. Value - number of executions
         self.__operation_count = {} # Key - op code. Value - number of executions
 
         self.__unparsedModule = None
         self.__parsedModule = None
 
-    def __importModule(self, filename, path):
-        spec = importlib.util.spec_from_file_location(filename, path)
+    
+    @property
+    def operations_table(self):
+        return self.__operations_table
+
+    def generate_operations_table(self, fileFrom):
+        self.__unparsedModule = self.__importModule(fileFrom)
+        self.__analyzeAlgoStack()
+
+    @staticmethod
+    def __importModule(filepath):
+        spec = importlib.util.spec_from_file_location(filepath, filepath)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
 
-    def __initModules(self, filesPaths):
-            self.__unparsedModule = self.__importModule(filesPaths[0], filesPaths[1])
-            self.__parsedModule = self.__importModule(filesPaths[2], filesPaths[3])
+    def initModules(self, fileUnparsed, fileParsed):
+            self.__unparsedModule = self.__importModule(fileUnparsed)
+            self.__parsedModule = self.__importModule(fileParsed)
 
     def __analyzeAlgoStack(self):
         self.__analyzeCodeObject(self.__unparsedModule.mySort, 1) # Analyze code with depth 1
@@ -40,18 +50,19 @@ class Analyzer:
                 self.__analyzeCodeObject(i.argval, depth - 1)
 
             if i.starts_line is not None:
-                self.__stack_operations[i.starts_line] = []
+                self.__operations_table[i.starts_line] = []
                 line_index = i.starts_line
 
             if line_index == -1:
                 raise Exception("Stack instructions analysis exception.\
                      Instruction set does not start with a line number.")
 
-            self.__stack_operations[line_index].append(i.opcode)
+            self.__operations_table[line_index].append(i.opcode)
 
     def countStackOperations(self):
-        for key in self.__stack_operations:
-            for opcode in self.__stack_operations[key]:
+        self.__operation_count = {}
+        for key in self.__operations_table:
+            for opcode in self.__operations_table[key]:
                 if opcode not in self.__operation_count:
                     self.__operation_count[opcode] = self.__lines_execution[key]
                 else:
@@ -67,9 +78,12 @@ class Analyzer:
         except Exception as e:
             print("User algorithm error.", str(e))
 
-    def analyze(self, filePaths):
+    def analyze(self):
+        self.countStackOperations()
+
+    def test_analyze(self, filePaths):
         try:
-            self.__initModules(filePaths)
+            self.initModules(filePaths)
             self.__analyzeAlgoStack()
 
             self.executeAlgorithm()
@@ -82,7 +96,7 @@ class Analyzer:
         except ImportError as e:
             print("User algorithm module loading error:", str(e))
         except Exception as e:
-            print("Other error:", str(e))           
+            print("Other error:", str(e))
 
     def showAnalysisResults(self):
         for k in {k: v for k, v in sorted(self.__operation_count.items(), key=lambda item: item[1], reverse=True)}:
