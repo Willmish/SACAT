@@ -38,6 +38,7 @@ class TestingController:
         p = Parser()
         p.parseCode(self.__uc, fileTo)
 
+        # TODO check for restricted functions/keywords
         self.__parsedModule = self.__importModule(fileTo)  # Import parsed module
 
     def analyseBytecode(self):
