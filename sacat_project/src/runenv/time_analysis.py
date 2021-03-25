@@ -5,6 +5,7 @@ The run environment should be able to handle SortedErrors as defined here.
 
 Written by Tim
 """
+import timeit
 
 from src.runenv.test_super import SortTest
 
@@ -26,8 +27,9 @@ class SortedError(Exception):
 
 
 class TimeAnalyser(SortTest):
-    def __init__(self, test_name):
+    def __init__(self, sorting_module, test_name):
         self.__test_name = test_name
+        self.__sorting_module = sorting_module
         # self._t_max = t_max
         # self._tests = [
         #   self._lstgen.random_lst(),    # random list
@@ -63,8 +65,9 @@ class TimeAnalyser(SortTest):
     #   self._lstgen.size = default_size
     #   return results
 
-    def analyse(self, my_sort, lst):
-        outputs, run_time = self._single_test(my_sort, lst)
+    def analyse(self, lst):
+        outputs, run_time = self._single_test(self.__sorting_module.mySort, lst)
+
         if not self._is_sorted(outputs, lst):
             # raise SortedError(self.__test_name, lst)
             print("Not sorted")

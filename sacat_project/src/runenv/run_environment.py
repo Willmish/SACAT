@@ -1,5 +1,6 @@
 from src.datagen.data_generator import ListGenerator
 from src.runenv.op_analysis import OpAnalyzer
+from src.runenv.space_analysis import SpaceAnalyzer
 from src.runenv.time_analysis import TimeAnalyser
 
 
@@ -79,8 +80,10 @@ class RunEnvironment():
     def run_with_generator(self, generator, test_type, time_analysis: bool, operations_analysis: bool,
                            space_analysis: bool):
         test_count = 0
-        time_analyser = TimeAnalyser(test_type)
+        time_analyser = TimeAnalyser(self.__unparsedModule, test_type)
         operations_analyser = OpAnalyzer(self.__parsedModule, self.__op_table, test_type)
+        space_analyser = SpaceAnalyzer(self.__unparsedModule, test_type)
+
         storage = TestStorage(test_type)
         while test_count < self.max_tests:
             self.lst_gen.size = self.lst_size
@@ -92,7 +95,7 @@ class RunEnvironment():
             if operations_analysis:
                 operations = self.run_test_operations(lst, operations_analyser)
             if space_analysis:
-                space = self.run_test_space(lst)
+                space = self.run_test_space(lst, space_analyser)
             storage.append(size, time, operations, space)
             # TODO is this the right way to increase the size?
             self.lst_size += self.step
@@ -100,19 +103,14 @@ class RunEnvironment():
         self.lst_size = 1
         return storage
 
-    def run_test_time(self, lst, time_analyser):
-        return time_analyser.analyse(self.__unparsedModule.mySort, lst)
+    @staticmethod
+    def run_test_time(lst, time_analyser):
+        return time_analyser.analyse(lst)
 
-    def run_test_operations(self, lst, operations_analyser):
-        return operations_analyser.analyse(lst)
-        # return None
+    @staticmethod
+    def run_test_operations(lst, operations_analyser):
+        return operations_analyser.analyse(lst)  # Operations returned as a dictionary
 
-    def run_test_space(self, lst):
-        return None
-
-
-# if __name__ == "__main__":
-#     re = RunEnvironment()
-#     results = re.run(MergeSort.merge_sort, True, False, False, True, True, True, True)
-#     for storage in results:
-#         print(storage)
+    @staticmethod
+    def run_test_space(lst, space_analyzer):
+        return space_analyzer.analyse(lst)  # Space (peak) returned in bytes

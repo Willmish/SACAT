@@ -27,8 +27,8 @@ class TestingController:
         self.__unparsedModule = self.__importModule(fileFrom)  # Import user module
 
     def preTest(self):
-        pre_test = PreTest()
-        run_time, failed = pre_test.run(self.__unparsedModule.mySort)
+        pre_test = PreTest(self.__unparsedModule)
+        run_time, failed = pre_test.run()
         print(run_time, failed)
         if len(failed) != 0:
             print("Some tests failed!")  # TMP
@@ -46,8 +46,8 @@ class TestingController:
         self.__op_table = a.operations_table
 
     def run_env(self):
-        re = RunEnvironment(self.__unparsedModule, self.__parsedModule, self.__op_table)
-        results = re.run(True, True, False, True, True, True, True)
+        re = RunEnvironment(self.__unparsedModule, self.__parsedModule, self.__op_table, step=100)
+        results = re.run(True, True, True, True, True, True, True)
         for storage in results:
             print(storage)
 
@@ -64,6 +64,3 @@ class TestingController:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
-
-tc = TestingController()
-tc.run_full()

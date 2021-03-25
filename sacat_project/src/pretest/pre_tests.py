@@ -13,7 +13,8 @@ from src.datagen.data_generator import ListGenerator
 
 
 class PreTest(SortTest):
-    def __init__(self):
+    def __init__(self, sorting_module):
+        self.__sorting_module = sorting_module
         self._lstgen = ListGenerator()
         self.__tests = [
             self._lstgen.random_lst(),  # random list
@@ -34,11 +35,11 @@ class PreTest(SortTest):
 
     # run all tests from self.tests, return processed
     # (hopefully sorted) lists and total time needed
-    def __all_tests(self, my_sort):
+    def __all_tests(self):
         results = []
         times = []
         for lst in self.__tests:
-            sorted_lst, time = self._single_test(my_sort, lst)
+            sorted_lst, time = self._single_test(self.__sorting_module.mySort, lst)
             results.append(self._is_sorted(sorted_lst, lst))
             times.append(time)
         return results, times
@@ -53,8 +54,8 @@ class PreTest(SortTest):
         return failed
 
     # main method: run tests on a sort algorithm my_sort
-    def run(self, my_sort):
-        results, times = self.__all_tests(my_sort)
+    def run(self):
+        results, times = self.__all_tests()
         run_time = round(sum(times), 4)
         failed = self.__check_results(results)
         return run_time, failed

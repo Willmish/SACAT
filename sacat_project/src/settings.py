@@ -1,3 +1,6 @@
+import sys
+sys.setrecursionlimit(10**6)
+
 DEBUG = False
 # DEBUG = True
 
@@ -6,6 +9,9 @@ DEBUG = False
 
 fileFrom = "./../res/input/merge_sort.py"
 fileTo = "./../res/output/merge_sort_edited.py"
+
+# fileFrom = "./../res/input/quick_sort.py"
+# fileTo = "./../res/output/quick_sort_edited.py"
 
 # Restricted functions/keywords
 
