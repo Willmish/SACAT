@@ -1,12 +1,14 @@
 import random
+import os.path
 
 # Other files
-from settings import *
-from guis.gui_8 import Ui_MainWindow
+from gui_settings import settings
+from gui_view import Ui_MainWindow
 
 # External Libraries
 from PyQt5 import QtCore,  QtWidgets
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QMessageBox, QDockWidget, QMdiArea, QMdiSubWindow
+from PyQt5.QtCore import pyqtSlot, Qt
 
 # Matplotlib
 import matplotlib
@@ -14,6 +16,9 @@ matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
+
+DOCKEXPERIMENT = False
+MDIEXPERIMENT = False
 
 # MATPLOTLIB WIDGET
 # Reference: https://pyshine.com/How-to-make-a-GUI-using-PyQt5-and-Matplotlib-to-plot-real-....
@@ -34,15 +39,27 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        # First configuration (SETTINGS)
-        self.ui.label_2.setText("SACAT v." + settings.get('VERSION'))
-        # self.ui.tmaxSDoubleSpin.setMinimum(settings.get("T_SMALL_MININUM"))
-        # self.ui.tmaxSDoubleSpin.setMaximum(settings.get("T_SMALL_MAXIMUM"))
-        # self.ui.tmaxSDoubleSpin.setValue(settings.get("T_SMALL_DEFAULT"))
-        # self.ui.tmaxLDoubleSpin.setMinimum(settings.get("T_LARGE_MINIMUM"))
-        # self.ui.tmaxLDoubleSpin.setMaximum(settings.get("T_LARGE_MAXIMUM"))
-        # self.ui.tmaxLDoubleSpin.setValue(settings.get("T_LARGE_DEFAULT"))
+        # Configuration
+        self._setDefaults()
+        self._connectButtons()
+        self._createMatplotlibCanvas()
+        self.showMaximized()
+        # self.setStyleSheet(CSS_STYLESHEET)
+        # self._setUpTimer(200)
 
+    def _setDefaults(self):
+        self.ui.progressBar.setVisible(False)
+        self.ui.label_2.setText("SACAT v." + settings.get("VERSION"))
+        self.ui.tmaxSDoubleSpin.setMinimum(settings.get("T_SMALL_MIN"))
+        self.ui.tmaxSDoubleSpin.setMaximum(settings.get("T_SMALL_MAX"))
+        self.ui.tmaxSDoubleSpin.setValue(settings.get("T_SMALL_DEFAULT"))
+        self.ui.tmaxLDoubleSpin.setSingleStep(0.5)
+        self.ui.tmaxLDoubleSpin.setMinimum(settings.get("T_LARGE_MIN"))
+        self.ui.tmaxLDoubleSpin.setMaximum(settings.get("T_LARGE_MAX"))
+        self.ui.tmaxLDoubleSpin.setValue(settings.get("T_LARGE_DEFAULT"))
+        self.ui.tmaxLDoubleSpin.setSingleStep(settings.get("T_LARGE_INC"))
+
+    def _connectButtons(self):
         # Connecting buttons
         self.ui.buttonOpen.clicked.connect(self.openFile)
         self.ui.buttonSave.clicked.connect(self.saveFile)
@@ -51,47 +68,94 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.buttonScore.clicked.connect(self.scoreCode)
         self.ui.buttonHelp.clicked.connect(self.displayHelp)
 
+    def _createMatplotlibCanvas(self):
         # Create the matplotlib FigureCanvas object,
         # which defines a single set of axes as self.axes.
-        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
-        toolbar = NavigationToolbar2QT(self.sc, self)
-        self.ui.plot_layout.addWidget(toolbar)
-        self.ui.plot_layout.addWidget(self.sc)
+        self.ui.widget.setParent(None)
+        self.ui.widget_3.setParent(None)
+        self.upperPlot = MplCanvas(self, width=5, height=5, dpi=100)
+        self.lowerPlot = MplCanvas(self, width=5, height=5, dpi=100)
+        self.ui.plot_layout.addWidget(NavigationToolbar2QT(self.upperPlot, self))
+        self.ui.plot_layout.addWidget(self.upperPlot)
+        self.ui.plot_layout.addWidget(NavigationToolbar2QT(self.lowerPlot, self))
+        self.ui.plot_layout.addWidget(self.lowerPlot)
 
-        self.xdata = [0,1,2,3,4]
-        self.ydata = [0,1,2,3,4]
-        self._plot_ref = None
-        self.update_plot()
+        # In development: optional changes to plot graphs display and layout
+        # experiment
+        if MDIEXPERIMENT:
+            self.mdi = QMdiArea()
+            self.mdi.setMaximumWidth(1000)
+            self.ui.plot_layout.addWidget(self.mdi)
+            sub1 = QMdiSubWindow()
+            sub1.setWidget(self.upperPlot)
+            sub1.setWindowTitle("First plot")
 
-        # Timer
+            sub2 = QMdiSubWindow()
+            sub2.setWidget(self.lowerPlot)
+            sub2.setWindowTitle("Second plot")
+            self.mdi.addSubWindow(sub1)
+            self.mdi.addSubWindow(sub2)
+
+            self.mdi.show()
+            #self.mdi.cascadeSubWindows()
+            #self.mdi.tileSubWindows()
+
+        # experiment
+        if DOCKEXPERIMENT:
+            self.dockwidget1 = QDockWidget('Dock1', self)
+            self.dockwidget1.setAllowedAreas(Qt.RightDockWidgetArea | Qt.LeftDockWidgetArea)
+            self.dockwidget1.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+            self.dockwidget1.setWidget(self.upperPlot)
+            self.dockwidget1.setFloating(False)
+
+            self.dockwidget2 = QDockWidget('Dock2', self)
+            self.dockwidget2.setAllowedAreas(Qt.RightDockWidgetArea | Qt.LeftDockWidgetArea)
+            self.dockwidget2.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+            self.dockwidget2.setWidget(self.lowerPlot)
+            self.dockwidget2.setFloating(False)
+
+            self.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget1)
+            self.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget2)
+
+    def _setUpTimer(self, interval):
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(200)
-        self.timer.timeout.connect(self.update_plot)
+        self.timer.setInterval(interval)
+        self.timer.timeout.connect(self.updatePlot)
         self.timer.start()
 
-    def update_plot(self):
-        # Drop off the first y eleme
-        self.ydata = self.ydata[1:] + [random.randint(0, 10)]
+    def showErrorMessage(self, title, text, information=None, details=None):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setWindowTitle(title)
+        msg.setText(text)
+        if information:
+            msg.setInformativeText(information)
+        if details:
+            msg.setDetailedText(details)
+        msg.exec_()
 
-        if self._plot_ref is None:
-            plot_refs = self.sc.axes.plot(self.xdata, self.ydata, 'r')
-            self._plot_ref = plot_refs[0]
-        else:
-            # we have a ref, so we can use it to update the data for that line
-            self._plot_ref.set_ydata(self.ydata)
+    def updateProgressBar(self, value, text):
+        self.ui.progressBar.setVisible(True)
+        if value < 100:
+            self.ui.progressBar.setValue(value)
+            self.ui.progressBar.setFormat(text)
 
-        self.sc.draw()
+    def updatePlot(self, plotObject, xdata, ydata):
+        """plotObject is either self.upperPlot or self.lowerPlot for now"""
+        plotObject.axes.plot(xdata, ydata, 'r')
+        plotObject.draw()
 
     @pyqtSlot()
     def openFile(self):
         try:
-            self.filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open code file', "", settings.get("ALLOWED_FILE_EXTENSIONS"))
-            if self.filename[0] != '':
-                f = open(self.filename[0], 'r')
+            name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open code file", "", "*.py;")
+            if name != "":
+                f = open(name, 'r')
                 data = f.read()
                 f.close()
                 self.ui.codeEditor.clear()
                 self.ui.codeEditor.insertPlainText(data)
+                self.ui.fileNameLabel.setText(os.path.basename(name))
         except Exception as e:
             raise(Exception(f"File could not be opened: {e}"))
 
@@ -99,31 +163,35 @@ class SacatApp(QtWidgets.QMainWindow):
     def saveFile(self):
         try:
             data = self.ui.codeEditor.toPlainText()
-            name = QtWidgets.QFileDialog.getSaveFileName(None, 'Save File', ('.py'))
-            file = open(name[0] + ".py", 'w')
-            file.writelines(data)
-            file.close()
+            name, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", "yourcode.py", "Python Files (*.py)")
+            if name:
+                if name[-3:] != ".py":
+                    file = open(name + ".py", 'w')
+                else:
+                    file = open(name, 'w')
+                file.writelines(data)
+                file.close()
+                self.ui.fileNameLabel.setText(os.path.basename(name))
         except Exception as e:
             raise (Exception(f"File could not be saved: {e}"))
 
     @pyqtSlot()
     def checkCode(self):
-        print("checkCode")
         pass
 
     @pyqtSlot()
     def analyseCode(self):
-        print("AnaluseCode")
-        pass
+        self.userCode = self.ui.codeEditor.toPlainText()
+        # just as an indicator
+        self.updateProgressBar(1, "Starting analysis")
+        # HERE IT ALL STARTS
 
     @pyqtSlot()
     def scoreCode(self):
-        print("scoreCode")
         pass
 
     @pyqtSlot()
     def displayHelp(self):
-        print("displayHelp")
         pass
 
 # if __name__ == '__main__':
