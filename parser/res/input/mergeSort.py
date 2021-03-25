@@ -1,10 +1,10 @@
-def mergeSort(arr):
+def mySort(arr):
     if len(arr) > 1:
         mid = len(arr)//2
         L = arr[:mid]
         R = arr[mid:]
-        mergeSort(L)
-        mergeSort(R)
+        mySort(L)
+        mySort(R)
         i = j = k = 0
         while i < len(L) and j < len(R):
             if L[i] < R[j]:
