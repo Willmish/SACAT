@@ -19,7 +19,7 @@ class Parser:
 
     def __addInit(self):
         """ initializes dictionary """
-        self.__inits = "lines_dict = {n : 0 for n in " + str(self.__keyList) + "}\n"
+        self.__inits = "lines_dict = {n: 0 for n in " + str(self.__keyList) + "}\n"
 
     def __addLineVars(self):
         # TODO check for other python keywords
@@ -30,7 +30,8 @@ class Parser:
             lineNum += 1
             spaceNum = self.__checkIndent(line)
 
-            if re.match(r'\s*#', line) is not None or re.fullmatch(r'\s*', line) or re.match(r' *else:', line) is not None:
+            if re.match(r'\s*#', line) is not None or re.fullmatch(r'\s*', line)\
+                    or re.match(r'\s*else:', line) is not None or re.match(r'\s*elif ', line) is not None:
                 self.__output_code += (line + '\n')
                 continue
             elif re.match(r'\s*except ', line) is not None:
