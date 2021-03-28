@@ -16,20 +16,23 @@ class TestingController:
         self.__uc = None
         self.__op_table = None
 
-    def checkUserCode(self):
+    def loadUserCode(self):
         self.__uc = UserCode(fileFrom)
+        self.checkCode(self.__uc)
+        self.__unparsedModule = self.__importModule(fileFrom)  # Import user module
+
+    @staticmethod
+    def checkCode(uc):
         try:
-            self.__uc.checkForRestricted()
+            uc.checkForRestricted()
         except RestrictedCodeError as e:
             print(e.message, ':', e.restrictedElement)
             return
 
-        self.__unparsedModule = self.__importModule(fileFrom)  # Import user module
-
     def preTest(self):
         pre_test = PreTest(self.__unparsedModule)
         run_time, failed = pre_test.run()
-        print(run_time, failed)
+
         if len(failed) != 0:
             print("Some tests failed!")  # TMP
             # return
@@ -38,7 +41,8 @@ class TestingController:
         p = Parser()
         p.parseCode(self.__uc, fileTo)
 
-        # TODO check for restricted functions/keywords
+        ec = UserCode(fileTo)
+        self.checkCode(ec)  # Check if there was no malicious code added to the edited file
         self.__parsedModule = self.__importModule(fileTo)  # Import parsed module
 
     def analyseBytecode(self):
@@ -47,13 +51,13 @@ class TestingController:
         self.__op_table = a.operations_table
 
     def run_env(self):
-        re = RunEnvironment(self.__unparsedModule, self.__parsedModule, self.__op_table, step=100)
+        re = RunEnvironment(self.__unparsedModule, self.__parsedModule, self.__op_table, step=1000)
         results = re.run(True, True, True, True, True, True, True)
         for storage in results:
             print(storage)
 
     def run_full(self):
-        self.checkUserCode()
+        self.loadUserCode()
         self.preTest()
         self.parseCode()
         self.analyseBytecode()
