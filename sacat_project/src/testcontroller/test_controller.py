@@ -10,13 +10,19 @@ from src.settings import *
 
 
 class TestingController:
-    def __init__(self):
+    def __init__(self, doTimeAnalysis, doNumOpAnalysis, doSpaceAnalysis, t_max, T_max):
         self.__unparsedModule = None
         self.__parsedModule = None
         self.__uc = None
         self.__op_table = None
+        self.doTimeAnalysis = doTimeAnalysis
+        self.doNumOpAnalysis = doNumOpAnalysis
+        self.doSpaceAnalysis =  doSpaceAnalysis
+        self.t_max = t_max
+        self.T_max = T_max
 
     def loadUserCode(self):
+        # TODO change fileFrom to a parameter passed from the GUI
         self.__uc = UserCode(fileFrom)
         self.checkCode(self.__uc)
         self.__unparsedModule = self.__importModule(fileFrom)  # Import user module
@@ -51,8 +57,9 @@ class TestingController:
         self.__op_table = a.operations_table
 
     def run_env(self):
+        # TODO change step and max_tests number as parameters from the GUI
         re = RunEnvironment(self.__unparsedModule, self.__parsedModule, self.__op_table, step=1000)
-        results = re.run(True, True, True, True, True, True, True)
+        results = re.run(self.doTimeAnalysis, self.doNumOpAnalysis, self.doSpaceAnalysis, True, True, True, True)
         for storage in results:
             print(storage)
 

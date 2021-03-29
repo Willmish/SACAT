@@ -2,24 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d457c55b-4aa9-4e85-a9df-84aefc2d9ba5" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/gui/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/gui/code_editor/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sacat_project.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sacat_project.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/data_analysis/data_analyser.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/data_analysis/objective_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/data_analysis/test_regression.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/code_editor/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/code_editor/editor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/code_editor/syntax.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/code_editor/syntax.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/gui_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/gui_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/gui_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/gui_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/gui_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/gui_settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/gui_view.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/gui_view.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/gui_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/gui_worker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/timeout_experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/timeout_experiment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/gui_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/gui_worker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/testcontroller/test_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/testcontroller/test_controller.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -39,7 +39,54 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.gui_controller (1)">
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.data_analyser">
+    <configuration name="data_analyser" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="sacat_project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/data_analysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/data_analysis/data_analyser.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="editor" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="sacat_project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/gui/code_editor" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/gui/code_editor/editor.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="gui_controller (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="sacat_project" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -106,7 +153,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.data_analyser" />
         <item itemvalue="Python.gui_controller (1)" />
+        <item itemvalue="Python.editor" />
         <item itemvalue="Python.gui_controller" />
         <item itemvalue="Python.run" />
       </list>

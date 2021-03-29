@@ -1,5 +1,6 @@
 from PyQt5.QtCore import pyqtSlot, QRunnable, QObject, pyqtSignal
 import time
+from src.testcontroller.test_controller import TestingController
 
 # https://www.learnpyqt.com/tutorials/multithreading-pyqt-applications-qthreadpool/
 class WorkerSignals(QObject):
@@ -17,7 +18,17 @@ class TestingControllerWorker(QRunnable):
         super(TestingControllerWorker, self).__init__()
         self.args = args
         self.kwargs = kwargs
+        self.doTimeAnalysis = kwargs["userInput"]["TIME_ANALYSIS"]
+        self.doNumOpAnalysis = kwargs["userInput"]["NUM_OF_OP_ANALYSIS"]
+        self.doSpaceAnalysis = kwargs["userInput"]["SPACE_ANALYSIS"]
+        self.t_max = kwargs["userInput"]["SMALL_T"]
+        self.T_max = kwargs["userInput"]["LARGE_T"]
+        self.user_code = None
         self.signals = WorkerSignals()
+        self.testing_controller = TestingController(self.doTimeAnalysis, self.doNumOpAnalysis, self.doSpaceAnalysis, self.t_max, self.T_max)
+
+    def saveUserCode(self):
+        pass
 
     @pyqtSlot()
     def run(self):
