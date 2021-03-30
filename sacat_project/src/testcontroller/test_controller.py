@@ -73,7 +73,7 @@ class TestingController:
         self.preTest()
         self.parseCode()
         self.analyseBytecode()
-        self.run_env()
+        return self.run_env()
 
     @staticmethod
     def __importModule(filepath):

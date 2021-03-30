@@ -14,8 +14,9 @@ plot_data() method to work.)
 # Use curve fitting (?) TODO CHECK IF BETTER OPTION EXISTS to find approximate equation for the complexity
 # Display scatter graph of data and assumed graph along with its complexity
 from typing import List, Tuple
-from test_regression import gen_data_return, swap_counter, merge_sort, heapSort, bubblesort
-from objective_functions import ObjectiveFunctions
+from src.data_analysis.objective_functions import ObjectiveFunctions
+from src.data_analysis.results_storage import ResultsStorage
+from src.runenv.run_environment import TestStorage
 
 from math import log
 import numpy as np
@@ -23,10 +24,10 @@ from sklearn.linear_model import LinearRegression
 from scipy.optimize import curve_fit
 
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 if DEBUG_MODE:
     # optional imports used for debugging (necessary for plot_data() method)
-    import math
+    from src.data_analysis.test_regression import gen_data_return, swap_counter, merge_sort, heapSort, bubblesort
     import matplotlib.pyplot as plt
 
 if DEBUG_MODE:
@@ -34,17 +35,75 @@ if DEBUG_MODE:
 
 class DataAnalyser:
     # TODO cahange so that it receives TestStorage as input
-    def __init__(self, data: List = [], sizes: List = []):
+    def __init__(self, testStorages: List[TestStorage]):
+        self.data = []
+        self.sizes = []
+        self.random_test_storage = None
+        self.duplicate_test_storage = None
+        self.sorted_test_storage = None
+        self.reversed_test_type = None
+        for storage in testStorages:
+            if storage.test_type == "random":
+                self.random_test_storage = storage
+            elif storage.test_type == "duplicate":
+                self.duplicate_test_storage = storage
+            elif storage.test_type == "sorted":
+                self.sorted_test_storage = storage
+            elif storage.test_type == "reversed":
+                self.reversed_test_type = storage
+            else:
+                raise Exception("TestStorage type not recognised by DataAnalyser!")
+
         self.complexity: str = ""
-        self.data: List = data
-        self.sizes: List = sizes
-        self.complexiites: List[Tuple] = []
+        self.complexities: List[Tuple] = []
 
     def set_data(self, new_data: List):
         self.data = new_data
 
     def set_sizes(self, new_sizes: List):
         self.sizes = new_sizes
+
+    def full_data_analysis(self):
+        storages = []
+        if self.random_test_storage is None:
+            storages.append(None)
+        else:
+            storages.append(self.test_on_storage(self.random_test_storage))
+        if self.duplicate_test_storage is None:
+            storages.append(None)
+        else:
+            storages.append(self.test_on_storage(self.duplicate_test_storage))
+        if self.sorted_test_storage is None:
+            storages.append(None)
+        else:
+            storages.append(self.test_on_storage(self.sorted_test_storage))
+        if self.reversed_test_type is None:
+            storages.append(None)
+        else:
+            storages.append(self.test_on_storage(self.reversed_test_type))
+        return storages
+
+    def test_on_storage(self, storage: TestStorage):
+        # TODO IMPORTANT NOTE: FOR SPACE ANALYSIS NEED DIFFERENT METHOD
+        result_storage = ResultsStorage(storage.test_type)
+        self.set_sizes(storage.sizes)
+        if storage.times[0] is not None:
+            self.set_data(storage.times)
+            result_storage.times_results = self.get_most_likely_complexity()
+        else:
+            result_storage.times_results = None
+        if storage.operations[0] is not None:
+            self.set_data(storage.operations)
+            result_storage.operations_results = self.get_most_likely_complexity()
+        else:
+            result_storage.operations_results = None
+        if storage.spaces[0] is not None:
+            self.set_data(storage.spaces)
+            result_storage.space_results = self.get_most_likely_complexity()
+        else:
+            result_storage.space_results = None
+        return result_storage
+
 
     def score_on_data(self, data, sizes):
         x = np.array(sizes).reshape((-1,1))
@@ -60,7 +119,7 @@ class DataAnalyser:
             print("Begin complexity analysis!")
 
         # logarithmic 
-        log_sizes = [math.log(i, 10) for i in self.sizes]
+        log_sizes = [log(i, 10) for i in self.sizes]
         self.complexities.append(("logn", self.score_on_data(self.data, log_sizes)))
         if DEBUG_MODE:
             print("logarithmic tested!")
@@ -73,7 +132,7 @@ class DataAnalyser:
         # Polylogarithmic? (log n)^k
 
         # linearithmic 
-        linlog_sizes = [i*math.log(i, 10) for i in self.sizes]
+        linlog_sizes = [i*log(i, 10) for i in self.sizes]
         self.complexities.append(("nlogn", self.score_on_data(self.data, linlog_sizes)))
         if DEBUG_MODE:
             print("linearithmic tested!")

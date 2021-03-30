@@ -1,6 +1,7 @@
 from PyQt5.QtCore import pyqtSlot, QRunnable, QObject, pyqtSignal
 import time
 from src.testcontroller.test_controller import TestingController
+from src.data_analysis.data_analyser import DataAnalyser
 
 # https://www.learnpyqt.com/tutorials/multithreading-pyqt-applications-qthreadpool/
 class WorkerSignals(QObject):
@@ -26,6 +27,7 @@ class TestingControllerWorker(QRunnable):
         self.saveUserCode()
         self.signals = WorkerSignals()
         self.testing_controller = TestingController(self.user_code_path, self.user_code_edited_path, self.parametersTuple)
+        self.data_analyser = None
 
 
     def saveUserCode(self):
@@ -42,7 +44,12 @@ class TestingControllerWorker(QRunnable):
     @pyqtSlot()
     def run(self):
         try:
-            self.testing_controller.run_full()
+            tested_data = self.testing_controller.run_full()
+            self.data_analyser = DataAnalyser(tested_data)
+            results = self.data_analyser.full_data_analysis()
+            print(results)
+            for r in results:
+                print(r)
             # Long Computation
             result = 100
         except Exception as e:
