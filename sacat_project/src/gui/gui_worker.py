@@ -6,6 +6,7 @@ from src.testcontroller.test_controller import TestingController
 class WorkerSignals(QObject):
     finished = pyqtSignal()
     result = pyqtSignal(object)
+    error = pyqtSignal(object)
 
 class TestingControllerWorker(QRunnable):
     """
@@ -14,20 +15,17 @@ class TestingControllerWorker(QRunnable):
     :param kwargs: ??? t_max, T_max, time_analysis_bool etc., user.code
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, user_code, parametersTuple, *args, **kwargs):
         super(TestingControllerWorker, self).__init__()
         self.args = args
         self.kwargs = kwargs
-        self.doTimeAnalysis = kwargs["userInput"]["TIME_ANALYSIS"]
-        self.doNumOpAnalysis = kwargs["userInput"]["NUM_OF_OP_ANALYSIS"]
-        self.doSpaceAnalysis = kwargs["userInput"]["SPACE_ANALYSIS"]
-        self.t_max = kwargs["userInput"]["SMALL_T"]
-        self.T_max = kwargs["userInput"]["LARGE_T"]
-        self.user_code = "HI"
+        self.user_code = user_code
+        self.parametersTuple = parametersTuple
         self.user_code_path = None
+        self.user_code_edited_path = None
         self.saveUserCode()
         self.signals = WorkerSignals()
-        self.testing_controller = TestingController(self.doTimeAnalysis, self.doNumOpAnalysis, self.doSpaceAnalysis, self.t_max, self.T_max)
+        self.testing_controller = TestingController(self.user_code_path, self.user_code_edited_path, self.parametersTuple)
 
 
     def saveUserCode(self):
@@ -36,6 +34,7 @@ class TestingControllerWorker(QRunnable):
         from os.path import dirname, realpath, sep
         sacat_project_path = dirname(dirname(dirname(realpath(__file__))))
         self.user_code_path = sacat_project_path + sep + "res" + sep + "input" + sep + "mySort.py"
+        self.user_code_edited_path = sacat_project_path + sep + "res" + sep + "input" + sep + "mySort_edited.py"
         with open(self.user_code_path, "w+") as f:
             f.write(self.user_code)
 
@@ -43,9 +42,8 @@ class TestingControllerWorker(QRunnable):
     @pyqtSlot()
     def run(self):
         try:
-            print(self.kwargs)
+            self.testing_controller.run_full()
             # Long Computation
-            time.sleep(5)
             result = 100
         except Exception as e:
             print(e)

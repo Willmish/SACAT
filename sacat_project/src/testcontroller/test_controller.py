@@ -10,24 +10,23 @@ from src.settings import *
 
 
 class TestingController:
-    def __init__(self, doTimeAnalysis, doNumOpAnalysis, doSpaceAnalysis, t_max, T_max):
+    def __init__(self, user_code_path, user_code_edited_path, parametersTuple):
         #(time_analysis: bool, numofop_analisys: bool, space_analysis: bool, testcount: int, step: int, random : bool,
         # duplicates: bool, sorted: bool, reversed: bool, tmax: int, Tmax: int)
         self.__unparsedModule = None
         self.__parsedModule = None
         self.__uc = None
         self.__op_table = None
-        self.doTimeAnalysis = doTimeAnalysis
-        self.doNumOpAnalysis = doNumOpAnalysis
-        self.doSpaceAnalysis =  doSpaceAnalysis
-        self.t_max = t_max
-        self.T_max = T_max
+        self.__user_code_path = user_code_path
+        self.__user_code_edited_path = user_code_edited_path
+        self.doTimeAnalysis, self.doNumOpAnalysis, self.doSpaceAnalysis, self.test_count, \
+        self.step, self.random, self.duplicate, self.sortedd, self.reversedd, self.t_max, self.T_max = parametersTuple
 
     def loadUserCode(self):
         # TODO change fileFrom to a parameter passed from the GUI
-        self.__uc = UserCode(fileFrom)
+        self.__uc = UserCode(self.__user_code_path)
         self.checkCode(self.__uc)
-        self.__unparsedModule = self.__importModule(fileFrom)  # Import user module
+        self.__unparsedModule = self.__importModule(self.__user_code_path)  # Import user module
 
     @staticmethod
     def checkCode(uc):
@@ -47,11 +46,11 @@ class TestingController:
 
     def parseCode(self):
         p = Parser()
-        p.parseCode(self.__uc, fileTo)
+        p.parseCode(self.__uc, self.__user_code_edited_path)
 
-        ec = UserCode(fileTo)
+        ec = UserCode(self.__user_code_edited_path)
         self.checkCode(ec)  # Check if there was no malicious code added to the edited file
-        self.__parsedModule = self.__importModule(fileTo)  # Import parsed module
+        self.__parsedModule = self.__importModule(self.__user_code_edited_path)  # Import parsed module
 
     def analyseBytecode(self):
         a = BytecodeAnalyzer(self.__unparsedModule)
@@ -60,8 +59,10 @@ class TestingController:
 
     def run_env(self):
         # TODO change step and max_tests number as parameters from the GUI
-        re = RunEnvironment(self.__unparsedModule, self.__parsedModule, self.__op_table, step=1000)
-        results = re.run(self.doTimeAnalysis, self.doNumOpAnalysis, self.doSpaceAnalysis, True, True, True, True)
+        re = RunEnvironment(self.__unparsedModule, self.__parsedModule, self.__op_table, t_max=self.t_max,
+                            T_max=self.T_max, step=self.step, max_tests=self.test_count)
+        results = re.run(self.doTimeAnalysis, self.doNumOpAnalysis, self.doSpaceAnalysis, random=self.random,
+                         duplicate=self.duplicate, sortedd=self.sortedd, reversedd=self.reversedd)
         for storage in results:
             print(storage)
 
