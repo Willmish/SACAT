@@ -26,6 +26,7 @@ class TestingControllerWorker(QRunnable):
         self.user_code_edited_path = None
         self.saveUserCode()
         self.signals = WorkerSignals()
+        # TODO may need to capture in try-catch block
         self.testing_controller = TestingController(self.user_code_path, self.user_code_edited_path, self.parametersTuple)
         self.data_analyser = None
 
@@ -47,7 +48,6 @@ class TestingControllerWorker(QRunnable):
             tested_data = self.testing_controller.run_full()
             self.data_analyser = DataAnalyser(tested_data)
             results = self.data_analyser.full_data_analysis()
-            print(results)
             for r in results:
                 print(r)
             # Long Computation
