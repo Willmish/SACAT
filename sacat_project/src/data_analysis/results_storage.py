@@ -8,13 +8,14 @@ class ResultsStorage:
         self.test_type = type
         self.times_results = None
         self.operations_results = None
+        self.most_common_operation = None
         self.space_results = None
 
     def __str__(self):
         result = ''
         result += f"Test type: {self.test_type} \n"
         result += f"Time results: {self.times_results}\n"
-        result += f"Operations results: {self.operations_results}\n"
+        result += f"Most common operation: {self.most_common_operation}\n Operations results: {self.operations_results}\n"
         result += f"Space results: {self.space_results}\n"
         return result
 

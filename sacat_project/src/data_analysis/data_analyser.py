@@ -24,7 +24,7 @@ from sklearn.linear_model import LinearRegression
 from scipy.optimize import curve_fit
 
 
-DEBUG_MODE = False
+DEBUG_MODE=False
 if DEBUG_MODE:
     # optional imports used for debugging (necessary for plot_data() method)
     from src.data_analysis.test_regression import gen_data_return, swap_counter, merge_sort, heapSort, bubblesort
@@ -83,6 +83,18 @@ class DataAnalyser:
             storages.append(self.test_on_storage(self.reversed_test_type))
         return storages
 
+    def modify_operations_storage(self, storage: TestStorage):
+        most_common_op = None
+        count = 0
+        for key in storage.operations[-1]:
+            if storage.operations[-1][key] > count:
+                count = storage.operations[-1][key]
+                most_common_op = key
+        # TODO CHANGE THIS: Currently changes all test results in the storage to the single most common one
+        for i in range(len(storage.operations)):
+            storage.operations[i] = storage.operations[i][most_common_op]
+        return most_common_op
+
     def test_on_storage(self, storage: TestStorage):
         # TODO IMPORTANT NOTE: FOR SPACE ANALYSIS NEED DIFFERENT METHOD
         result_storage = ResultsStorage(storage.test_type)
@@ -93,6 +105,7 @@ class DataAnalyser:
         else:
             result_storage.times_results = None
         if storage.operations[0] is not None:
+            result_storage.most_common_operation = self.modify_operations_storage(storage)
             self.set_data(storage.operations)
             result_storage.operations_results = self.get_most_likely_complexity()
         else:
