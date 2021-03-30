@@ -26,6 +26,7 @@ class TestingControllerWorker(QRunnable):
         self.user_code_edited_path = None
         self.saveUserCode()
         self.signals = WorkerSignals()
+        # TODO may need to capture in try-catch block
         self.testing_controller = TestingController(self.user_code_path, self.user_code_edited_path, self.parametersTuple)
         self.data_analyser = None
 

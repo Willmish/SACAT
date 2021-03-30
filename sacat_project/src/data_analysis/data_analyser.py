@@ -84,6 +84,7 @@ class DataAnalyser:
         return storages
 
     def modify_operations_storage(self, storage: TestStorage):
+        from dis import opname
         most_common_op = None
         count = 0
         for key in storage.operations[-1]:
@@ -93,7 +94,7 @@ class DataAnalyser:
         # TODO CHANGE THIS: Currently changes all test results in the storage to the single most common one
         for i in range(len(storage.operations)):
             storage.operations[i] = storage.operations[i][most_common_op]
-        return most_common_op
+        return opname[most_common_op]
 
     def test_on_storage(self, storage: TestStorage):
         # TODO IMPORTANT NOTE: FOR SPACE ANALYSIS NEED DIFFERENT METHOD
