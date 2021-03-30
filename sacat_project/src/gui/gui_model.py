@@ -168,7 +168,7 @@ class SacatApp(QtWidgets.QMainWindow):
     @pyqtSlot()
     def openFile(self):
         try:
-            name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open code file", "", "*.py;")
+            name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open code file", "", "*.py")
             if name != "":
                 f = open(name, 'r')
                 data = f.read()
