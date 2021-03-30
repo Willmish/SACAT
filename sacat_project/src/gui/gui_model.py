@@ -44,6 +44,7 @@ class SacatApp(QtWidgets.QMainWindow):
         # Configuration
         self._setDefaults()
         self._connectButtons()
+        self._hideAlphaContent()
         self._createMatplotlibCanvas()
         self.showMaximized()
         # self.setStyleSheet(CSS_STYLESHEET)
@@ -138,6 +139,10 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.tmaxLDoubleSpin.setEnabled(activate)
         self.ui.codeEditor.setEnabled(activate)
 
+    def _hideAlphaContent(self):
+        self.ui.buttonCheck.setVisible(False)
+        self.ui.buttonScore.setVisible(False)
+
     def showErrorMessage(self, title, text, information=None, details=None):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
@@ -196,29 +201,52 @@ class SacatApp(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def analyseCode(self):
-        # HERE IT ALL STARTS
+        # Checking for valid user settings
+        if not(self.isAtLeastOneAnalysisChecked()):
+            self.showErrorMessage("NO OPTION CHOSEN",
+                                  "You MUST choose at least one of the three given \n"
+                                  "methods in \"Analyses\" Groupbox")
+            return
+
+        if not(self.isAtLeastOneTestGroupChecked()):
+            self.showErrorMessage("NO TESTGROUP CHOSEN",
+                                  "You MUST choose at least one of the four given \n"
+                                  "test groups in \"Testing\" Groupbox")
+            return
+
+        # Start
+        self.updateProgressBar(1, "Starting analysis") # just an indicator
         # block input elements
         self._changeInputState(False)
         # get user input
-        userInput = dict()
-        userInput["TIME_ANALYSIS"] = self.ui.timeCheckbox.isChecked()
-        userInput["NUM_OF_OP_ANALYSIS"] = self.ui.timeCheckbox.isChecked()
-        userInput["SPACE_ANALYSIS"] = self.ui.spaceCheckbox.isChecked()
-        userInput["SMALL_T"] = self.ui.tmaxSDoubleSpin.value()
-        userInput["LARGE_T"] = self.ui.tmaxLDoubleSpin.value()
-        #print(userInput)
-        # Is userCode needed in a str form, or is the package just importing an existing file
-        # What if user types code, where is it saved as a input file?
-        # Shall I get the file name?
-        self.userCode = self.ui.codeEditor.toPlainText() # can get user code in string form
-        # just as an indicator
-        self.updateProgressBar(1, "Starting analysis")
+        user_code = self.ui.codeEditor.toPlainText()
+        parametersTuple = (self.ui.timeCheckbox.isChecked(),
+                           self.ui.numOfOpCheckbox.isChecked(),
+                           self.ui.spaceCheckbox.isChecked(),
+                           self.ui.testcountSpin.value(),
+                           self.ui.stepSpin.value(),
+                           self.ui.randomCheckbox.isChecked(),
+                           self.ui.duplicatesCheckbox.isChecked(),
+                           self.ui.sortedCheckbox.isChecked(),
+                           self.ui.reversedCheckbox.isChecked(),
+                           self.ui.tmaxSDoubleSpin.value(),
+                           self.ui.tmaxLDoubleSpin.value(),)
+
         # create and connect the worker thread
-        worker = TestingControllerWorker(userInput=userInput)
+        worker = TestingControllerWorker(user_code, parametersTuple)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(self.thread_complete)
+        worker.signals.error.connect(self.showError)
         #worker.signals.progress.connect(self.progress_fn)
         self.threadpool.start(worker)
+
+    def isAtLeastOneAnalysisChecked(self):
+        return self.ui.timeCheckbox.isChecked() or self.ui.numOfOpCheckbox.isChecked() or self.ui.spaceCheckbox.isChecked()
+
+    def isAtLeastOneTestGroupChecked(self):
+        a = self.ui.randomCheckbox.isChecked() or self.ui.duplicatesCheckbox.isChecked()
+        b = self.ui.sortedCheckbox.isChecked() or self.ui.reversedCheckbox.isChecked()
+        return a or b
 
     @pyqtSlot()
     def scoreCode(self):
@@ -234,6 +262,9 @@ class SacatApp(QtWidgets.QMainWindow):
 
     def print_output(self, r):
         print(r)
+
+    def showError(self, s):
+        self.showErrorMessage("ERROR", str(s))
 
 
 # if __name__ == '__main__':
