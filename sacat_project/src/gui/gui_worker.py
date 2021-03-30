@@ -23,12 +23,22 @@ class TestingControllerWorker(QRunnable):
         self.doSpaceAnalysis = kwargs["userInput"]["SPACE_ANALYSIS"]
         self.t_max = kwargs["userInput"]["SMALL_T"]
         self.T_max = kwargs["userInput"]["LARGE_T"]
-        self.user_code = None
+        self.user_code = "HI"
+        self.user_code_path = None
+        self.saveUserCode()
         self.signals = WorkerSignals()
         self.testing_controller = TestingController(self.doTimeAnalysis, self.doNumOpAnalysis, self.doSpaceAnalysis, self.t_max, self.T_max)
 
+
     def saveUserCode(self):
-        pass
+        # IMPORTANT that this stays in sacat_project/src/gui/
+        # first gets the path of 2 directories above (sacat_project) and appends (seperator)input(seperator)filename.py
+        from os.path import dirname, realpath, sep
+        sacat_project_path = dirname(dirname(dirname(realpath(__file__))))
+        self.user_code_path = sacat_project_path + sep + "res" + sep + "input" + sep + "mySort.py"
+        with open(self.user_code_path, "w+") as f:
+            f.write(self.user_code)
+
 
     @pyqtSlot()
     def run(self):

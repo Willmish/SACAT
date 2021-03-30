@@ -144,7 +144,7 @@ class DataAnalyser:
                 a, b, c, d = popt
                 print(a, "n3 + ", b, "n2 + ", c, "n + ", d)
                 self.plot_data(predicted_data, self.data, self.sizes, most_likely_complexity, popt)
-            return (most_likely_complexity, popt, predicted_data, self.data, self.sizes)
+            return (most_likely_complexity, popt, predicted_data, self.data, self.sizes) # TODO data type for results (4 data storages, each with 4 tests to analyse)
 
     def plot_data(self, predicted_data, data, sizes, complexity, parameters):
         fig, axs = plt.subplots(1, 1)

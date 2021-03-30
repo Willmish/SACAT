@@ -11,6 +11,8 @@ from src.settings import *
 
 class TestingController:
     def __init__(self, doTimeAnalysis, doNumOpAnalysis, doSpaceAnalysis, t_max, T_max):
+        #(time_analysis: bool, numofop_analisys: bool, space_analysis: bool, testcount: int, step: int, random : bool,
+        # duplicates: bool, sorted: bool, reversed: bool, tmax: int, Tmax: int)
         self.__unparsedModule = None
         self.__parsedModule = None
         self.__uc = None
@@ -62,6 +64,8 @@ class TestingController:
         results = re.run(self.doTimeAnalysis, self.doNumOpAnalysis, self.doSpaceAnalysis, True, True, True, True)
         for storage in results:
             print(storage)
+
+        return results
 
     def run_full(self):
         self.loadUserCode()
