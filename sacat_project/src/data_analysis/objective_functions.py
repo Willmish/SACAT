@@ -9,7 +9,9 @@ from math import log
 class ObjectiveFunctions:
     @staticmethod
     def logarithmic_objective(x, a, b):
-        return a * log(x, 10) + b
+        if isinstance(x, int) or isinstance(x, float):
+            return (a**log(x, 10) + b)
+        return [(a*log(i, 10) + b) for i in x]
 
     @staticmethod
     def linear_objective(x, a, b): # TODO what about An + Blogn + C

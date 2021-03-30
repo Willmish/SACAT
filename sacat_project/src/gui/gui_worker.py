@@ -48,7 +48,6 @@ class TestingControllerWorker(QRunnable):
             tested_data = self.testing_controller.run_full()
             self.data_analyser = DataAnalyser(tested_data)
             results = self.data_analyser.full_data_analysis()
-            print(results)
             for r in results:
                 print(r)
             # Long Computation
