@@ -34,7 +34,8 @@ class TestStorage():
 
 class RunEnvironment():
     # TODO default values for t_max etc.?
-    def __init__(self, unparsedModule, parsedModule, op_table, t_max=1, T_max=10, max_tests=10, step=100):
+    def __init__(self, unparsedModule, parsedModule, op_table, t_max=1, T_max=10, max_tests=10, step=100, signals=None):
+        self.__signals = signals
         self.__unparsedModule = unparsedModule
         self.__parsedModule = parsedModule
         self.__op_table = op_table
@@ -46,6 +47,8 @@ class RunEnvironment():
         self.lst_gen = ListGenerator(size=self.lst_size)
         self.test_sizes = []
         self.test_output = []
+        self.num_all_tests = None
+        self.current_test_state = 0
 
     # def signal_handler(signum, frame):
     #   raise Exception("Timed out!")
@@ -58,8 +61,13 @@ class RunEnvironment():
     #   except Exception, msg:
     #       print "Timed out!"
 
+    def __calculate_all_tests(self, b1, b2, b3, b4):
+        self.num_all_tests = sum([1 if x is True else 0 for x in [b1, b2, b3, b4]]) * self.max_tests
+
     def run(self, time_analysis: bool, operations_analysis: bool, space_analysis: bool, random: bool,
             duplicate: bool, sortedd: bool, reversedd: bool):
+        self.__calculate_all_tests(random, duplicate, sortedd, reversedd)
+
         storage_lst = []
         if random:
             storage_lst.append(
@@ -79,13 +87,12 @@ class RunEnvironment():
 
     def run_with_generator(self, generator, test_type, time_analysis: bool, operations_analysis: bool,
                            space_analysis: bool):
-        test_count = 0
         time_analyser = TimeAnalyser(self.__unparsedModule, test_type)
         operations_analyser = OpAnalyzer(self.__parsedModule, self.__op_table, test_type)
         space_analyser = SpaceAnalyzer(self.__unparsedModule, test_type)
 
         storage = TestStorage(test_type)
-        while test_count < self.max_tests:
+        for test_count in range(self.max_tests):
             self.lst_gen.size = self.lst_size
             lst = generator()
             size = len(lst)
@@ -99,9 +106,17 @@ class RunEnvironment():
             storage.append(size, time, operations, space)
             # TODO is this the right way to increase the size?
             self.lst_size += self.step
-            test_count += 1
+            # print(test_count/self.max_tests)
+
+            self.__update_progress()
+            # print(self.current_test_state/self.num_all_tests)
         self.lst_size = 1
         return storage
+
+    def __update_progress(self):
+        self.current_test_state += 1
+        current_state = int(100 * (self.current_test_state / self.num_all_tests) / 2)
+        self.__signals.progress.emit((current_state, "Testing in progress..."))
 
     @staticmethod
     def run_test_time(lst, time_analyser):

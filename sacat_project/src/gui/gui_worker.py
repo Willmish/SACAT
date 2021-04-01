@@ -53,15 +53,15 @@ class TestingControllerWorker(QRunnable):
     @pyqtSlot()
     def run(self):
         try:
-            tested_data = self.testing_controller.run_full()
-            self.signals.progress.emit((34, "Testing code finished..."))
+            tested_data = self.testing_controller.run_full(self.signals)
+            self.signals.progress.emit((50, "Testing code finished..."))
             time.sleep(1)
-            self.signals.progress.emit((40, "Analyzing data..."))
+            self.signals.progress.emit((50, "Analyzing data..."))
             self.data_analyser = DataAnalyser(tested_data)
             results = self.data_analyser.full_data_analysis()
             self.signals.progress.emit((90, "Fetching results..."))
-            for r in results:
-                print(r)
+            # for r in results:
+            #     print(r)
             # Long Computation
             #result = 100
 
