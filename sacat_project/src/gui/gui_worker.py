@@ -8,6 +8,7 @@ class WorkerSignals(QObject):
     finished = pyqtSignal()
     result = pyqtSignal(object)
     error = pyqtSignal(object)
+    progress = pyqtSignal(tuple)
 
 class TestingControllerWorker(QRunnable):
     """
@@ -29,6 +30,7 @@ class TestingControllerWorker(QRunnable):
         # TODO may need to capture in try-catch block
         self.testing_controller = TestingController(self.user_code_path, self.user_code_edited_path, self.parametersTuple)
         self.data_analyser = None
+        self.signals.progress.emit((10,"Testing object created..."))
 
 
     def saveUserCode(self):
@@ -46,16 +48,24 @@ class TestingControllerWorker(QRunnable):
     def run(self):
         try:
             tested_data = self.testing_controller.run_full()
+            self.signals.progress.emit((34,"Testing code finished..."))
+            time.sleep(1)
+            self.signals.progress.emit((40,"Analyzing data..."))
             self.data_analyser = DataAnalyser(tested_data)
             results = self.data_analyser.full_data_analysis()
+            self.signals.progress.emit((90, "Fetching results..."))
             for r in results:
                 print(r)
             # Long Computation
-            result = 100
+            #result = 100
         except Exception as e:
-            print(e)
+            print("ERROR")
+            self.signals.error.emit(e)
         else:
-            self.signals.result.emit(result)
+            self.signals.result.emit(results)
         finally:
+            self.signals.progress.emit((100, "Finished"))
+            time.sleep(1)
             self.signals.finished.emit()
+
         # Run the necessary testing and store it
