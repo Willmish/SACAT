@@ -131,11 +131,15 @@ class SacatApp(QtWidgets.QMainWindow):
             self.ui.progressBar.setValue(valueAndText[0])
             self.ui.progressBar.setFormat(valueAndText[1])
 
-    def updatePlot(self, plotObject, xdata, ydata):
+    def updatePlot(self, plotObject, xdata, ydata, group_name):
         """plotObject is either self.upperPlot or self.lowerPlot for now"""
         # plotObject.axes.clear()
-        plotObject.axes.scatter(xdata, ydata, color=plotObject.color)
+        plotObject.axes.scatter(xdata, ydata, color=plotObject.color, label=group_name)
+        if plotObject.axes.get_legend() is not None:
+            plotObject.axes.get_legend().remove()
+        plotObject.axes.legend()
         plotObject.draw()
+
 
     @pyqtSlot()
     def openFile(self):
@@ -285,9 +289,9 @@ class SacatApp(QtWidgets.QMainWindow):
         graph_1_group = self.r[groups.index(self.ui.comboBox_group_1.currentText())]
         graph_2_group = self.r[groups.index(self.ui.comboBox_group_2.currentText())]
         if g1 == True:
-            self.changePlot(graph_1_group, graph_1_mode, self.upperPlot)  # graph 1
+            self.changePlot(graph_1_group, graph_1_mode, self.upperPlot, self.ui.comboBox_group_1.currentText())  # graph 1
         if g2 == True:
-            self.changePlot(graph_2_group, graph_2_mode, self.lowerPlot)  # graph 2
+            self.changePlot(graph_2_group, graph_2_mode, self.lowerPlot, self.ui.comboBox_group_2.currentText())  # graph 2
 
     def managePlot1(self):
         self.managePlots(True, False)
@@ -295,22 +299,24 @@ class SacatApp(QtWidgets.QMainWindow):
     def managePlot2(self):
         self.managePlots(False, True)
 
-    def changePlot(self, group, mode, graph):
+    def changePlot(self, group, mode, graph, group_name):
         if mode == "Time analysis":
             bestfit, coefs, y_pred, y, sizes = group.times_results
         elif mode == "Number of operations analysis":
             bestfit, coefs, y_pred, y, sizes = group.operations_results
         else:  # Space analysis
             bestfit, coefs, y_pred, y, sizes = group.space_results
-        self.updatePlot(graph, sizes, y)
+        self.updatePlot(graph, sizes, y, group_name)
 
     def clearUpperPlot(self):
         self.upperPlot.axes.clear()
-        self.updatePlot(self.upperPlot, [], [])
+        self.upperPlot.draw()
+        # self.updatePlot(self.upperPlot, [], [])
 
     def clearLowerPlot(self):
         self.lowerPlot.axes.clear()
-        self.updatePlot(self.lowerPlot, [], [])
+        self.lowerPlot.draw()
+        # self.updatePlot(self.lowerPlot, [], [])
 
     def pickColor_1(self):
         color = QtWidgets.QColorDialog.getColor()

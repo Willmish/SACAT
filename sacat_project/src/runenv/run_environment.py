@@ -108,15 +108,15 @@ class RunEnvironment():
             self.lst_size += self.step
             # print(test_count/self.max_tests)
 
-            self.__update_progress()
+            self.__update_progress(test_count, test_type)
             # print(self.current_test_state/self.num_all_tests)
         self.lst_size = 1
         return storage
 
-    def __update_progress(self):
+    def __update_progress(self, test_count, test_name):
         self.current_test_state += 1
         current_state = int(100 * (self.current_test_state / self.num_all_tests) / 2)
-        self.__signals.progress.emit((current_state, "Testing in progress..."))
+        self.__signals.progress.emit((current_state, "Testing in progress... (" + str(test_name) + " " + str(test_count) + "/" + str(self.max_tests) + ")"))
 
     @staticmethod
     def run_test_time(lst, time_analyser):
