@@ -2,13 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d457c55b-4aa9-4e85-a9df-84aefc2d9ba5" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/res/input/insertion_sort.py" beforeDir="false" afterPath="$PROJECT_DIR$/res/input/insertion_sort.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/input/parser_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/res/input/parser_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/output/parser_test_edited.py" beforeDir="false" afterPath="$PROJECT_DIR$/res/output/parser_test_edited.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/runenv/op_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/runenv/op_analysis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/runenv/run_environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/runenv/run_environment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/testcontroller/test_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/testcontroller/test_controller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/res/input/mySort.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/res/input/mySort_edited.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/gui_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/gui_model.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,7 +22,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="ProjectId" id="1qFwHJLHQTokH4NJqpEy7rS2RXE" />
-  <component name="ProjectLevelVcsManager">
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
@@ -198,7 +194,8 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/sacat_project$gui_controller.coverage" NAME="gui_controller Coverage Results" MODIFIED="1617304362503" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/gui" />
     <SUITE FILE_PATH="coverage/sacat_project$run.coverage" NAME="run Coverage Results" MODIFIED="1616955931437" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-    <SUITE FILE_PATH="coverage/sacat_project$gui_controller__1_.coverage" NAME="gui_controller (1) Coverage Results" MODIFIED="1617128257978" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/gui" />
+    <SUITE FILE_PATH="coverage/sacat_project$gui_controller__1_.coverage" NAME="gui_controller (1) Coverage Results" MODIFIED="1617304199900" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/gui" />
   </component>
 </project>

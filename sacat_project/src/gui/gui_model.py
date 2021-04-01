@@ -4,22 +4,23 @@ import time
 
 # Other files
 from gui_settings import settings
-from gui_14 import Ui_MainWindow
+from gui_view import Ui_MainWindow
 
 # External Libraries
-from PyQt5 import QtCore,  QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox, QDockWidget, QMdiArea, QMdiSubWindow
 from PyQt5.QtCore import pyqtSlot, Qt, QRunnable, QThreadPool, QObject, pyqtSignal
 
 # Matplotlib
 import matplotlib
+
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
 from gui_worker import TestingControllerWorker
-import qdarkstyle
 import qdarkgraystyle
+
 
 # MATPLOTLIB WIDGET
 # Reference: https://pyshine.com/How-to-make-a-GUI-using-PyQt5-and-Matplotlib-to-plot-real-....
@@ -33,6 +34,7 @@ class MplCanvas(FigureCanvas):
 
     def setColor(self, color):
         self.color = color
+
 
 # Main Class
 class SacatApp(QtWidgets.QMainWindow):
@@ -100,7 +102,7 @@ class SacatApp(QtWidgets.QMainWindow):
         # self.lowerPlot.axes.axis([0, 10, 0, 10])
         # self.lowerPlot.axes.text(4, 5, 'GRAPH 2', fontsize=32)
 
-    def _changeInputState(self, activate:bool):
+    def _changeInputState(self, activate: bool):
         """all the input elements get blocked or unblocked depending on activate"""
         self.ui.buttonOpen.setEnabled(activate)
         self.ui.buttonSave.setEnabled(activate)
@@ -135,7 +137,6 @@ class SacatApp(QtWidgets.QMainWindow):
         plotObject.axes.scatter(xdata, ydata, color=plotObject.color)
         plotObject.draw()
 
-
     @pyqtSlot()
     def openFile(self):
         try:
@@ -149,14 +150,16 @@ class SacatApp(QtWidgets.QMainWindow):
                 self.ui.codeEditor.insertPlainText(data)
                 self.ui.fileNameLabel.setText(os.path.basename(name))
         except Exception as e:
-            raise(Exception(f"File could not be opened: {e}"))
+            raise (Exception(f"File could not be opened: {e}"))
 
     @pyqtSlot()
     def saveFile(self):
         try:
             data = self.ui.codeEditor.toPlainText()
             sacat_project_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-            name, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", sacat_project_path + os.path.sep + "yourcode.py", "Python Files (*.py)")
+            name, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File",
+                                                            sacat_project_path + os.path.sep + "yourcode.py",
+                                                            "Python Files (*.py)")
             if name:
                 if name[-3:] != ".py":
                     file = open(name + ".py", 'w')
@@ -171,13 +174,13 @@ class SacatApp(QtWidgets.QMainWindow):
     @pyqtSlot()
     def analyseCode(self):
         # Checking for valid user settings
-        if not(self.isAtLeastOneAnalysisChecked()):
+        if not (self.isAtLeastOneAnalysisChecked()):
             self.showErrorMessage("NO OPTION CHOSEN",
                                   "You MUST choose at least one of the three given \n"
                                   "methods in \"Analyses\" Groupbox")
             return
 
-        if not(self.isAtLeastOneTestGroupChecked()):
+        if not (self.isAtLeastOneTestGroupChecked()):
             self.showErrorMessage("NO TESTGROUP CHOSEN",
                                   "You MUST choose at least one of the four given \n"
                                   "test groups in \"Testing\" Groupbox")
@@ -214,7 +217,7 @@ class SacatApp(QtWidgets.QMainWindow):
             self.ui.comboBox_group_2.addItem("reversed")
 
         # Start
-        self.updateProgressBar((1, "Starting...")) # just an indicator
+        self.updateProgressBar((1, "Starting..."))  # just an indicator
         # block input elements
         self._changeInputState(False)
         # get user input
@@ -237,7 +240,7 @@ class SacatApp(QtWidgets.QMainWindow):
         worker.signals.finished.connect(self.thread_complete)
         worker.signals.error.connect(self.showError)
         worker.signals.progress.connect(self.updateProgressBar)
-        #worker.signals.progress.connect(self.progress_fn)
+        # worker.signals.progress.connect(self.progress_fn)
         self.threadpool.start(worker)
 
     def isAtLeastOneAnalysisChecked(self):
@@ -254,7 +257,7 @@ class SacatApp(QtWidgets.QMainWindow):
 
     def thread_complete(self):
         self._changeInputState(True)
-        self.updateProgressBar((0,""))
+        self.updateProgressBar((0, ""))
         self.ui.progressBar.setVisible(False)
         print("THREAD COMPLETE")
 
@@ -269,8 +272,7 @@ class SacatApp(QtWidgets.QMainWindow):
         # [random, duplicates, sorted, reversed]
         # Manage graphs
         self.managePlots()
-        #print(r)
-
+        # print(r)
 
     def managePlots(self, g1=True, g2=True):
         if self.r is None:
@@ -283,9 +285,9 @@ class SacatApp(QtWidgets.QMainWindow):
         graph_1_group = self.r[groups.index(self.ui.comboBox_group_1.currentText())]
         graph_2_group = self.r[groups.index(self.ui.comboBox_group_2.currentText())]
         if g1 == True:
-            self.changePlot(graph_1_group, graph_1_mode, self.upperPlot) # graph 1
+            self.changePlot(graph_1_group, graph_1_mode, self.upperPlot)  # graph 1
         if g2 == True:
-            self.changePlot(graph_2_group, graph_2_mode, self.lowerPlot) # graph 2
+            self.changePlot(graph_2_group, graph_2_mode, self.lowerPlot)  # graph 2
 
     def managePlot1(self):
         self.managePlots(True, False)
@@ -315,7 +317,7 @@ class SacatApp(QtWidgets.QMainWindow):
 
         if color.isValid():
             self.ui.buttonColor_1.setStyleSheet(f"background-color: {color.name()}")
-            #self.upperPlot.axes.set_facecolor("blue")
+            # self.upperPlot.axes.set_facecolor("blue")
             self.upperPlot.setColor(color.name())
 
     def pickColor_2(self):
@@ -324,11 +326,10 @@ class SacatApp(QtWidgets.QMainWindow):
         if color.isValid():
             self.ui.buttonColor_2.setStyleSheet(f"background-color: {color.name()}")
             self.lowerPlot.setColor(color.name())
-            #self.lowerPlot.axes.set_facecolor("blue")
+            # self.lowerPlot.axes.set_facecolor("blue")
 
     def showError(self, s):
         self.showErrorMessage("ERROR", str(s))
-
 
 # if __name__ == '__main__':
 #     app = QtWidgets.QApplication([])
