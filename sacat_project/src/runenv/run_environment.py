@@ -34,8 +34,8 @@ class TestStorage():
 
 class RunEnvironment():
     # TODO default values for t_max etc.?
-    def __init__(self, unparsedModule, parsedModule, op_table, t_max=1, T_max=10, max_tests=10, step=100, signals=None):
-        self.__signals = signals
+    def __init__(self, unparsedModule, parsedModule, op_table, t_max=1, T_max=10, max_tests=10, step=100, pipe=None):
+        self.__pipe = pipe
         self.__unparsedModule = unparsedModule
         self.__parsedModule = parsedModule
         self.__op_table = op_table
@@ -106,17 +106,19 @@ class RunEnvironment():
             storage.append(size, time, operations, space)
             # TODO is this the right way to increase the size?
             self.lst_size += self.step
-            # print(test_count/self.max_tests)
 
             self.__update_progress(test_count, test_type)
-            # print(self.current_test_state/self.num_all_tests)
+
         self.lst_size = 1
         return storage
 
     def __update_progress(self, test_count, test_name):
         self.current_test_state += 1
         current_state = int(100 * (self.current_test_state / self.num_all_tests) / 2)
-        self.__signals.progress.emit((current_state, "Testing in progress... (" + str(test_name) + " " + str(test_count) + "/" + str(self.max_tests) + ")"))
+        # self.__signals.progress.emit((current_state, "Testing in progress... (" + str(test_name) + " " + str(test_count) + "/" + str(self.max_tests) + ")"))
+        if self.__pipe is not None:
+            self.__pipe.send((0, (current_state, "Testing in progress... (" + str(test_name) + " " + str(test_count)\
+                                  + "/" + str(self.max_tests) + ")")))
 
     @staticmethod
     def run_test_time(lst, time_analyser):

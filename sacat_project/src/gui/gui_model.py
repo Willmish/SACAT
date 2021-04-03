@@ -1,6 +1,7 @@
 import random
 import os.path
 import time
+import multiprocessing as mp
 
 # Other files
 from gui_settings import settings
@@ -18,7 +19,7 @@ matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
-from gui_worker import TestingControllerWorker
+from gui_worker import TestingControllerWorker, ReceiverEmitter, WorkerSignals
 import qdarkgraystyle
 
 
@@ -58,6 +59,8 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.codeEditor.setStyleSheet("background-color: rgb(255,255,255); color: rgb(0,0,0)")
         # Threadpool for worker computations
         self.threadpool = QThreadPool()
+        self.worker = None
+        self.receiver_emitter = None
 
     def _setDefaults(self):
         self.ui.progressBar.setVisible(False)
@@ -80,6 +83,7 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.buttonOpen.clicked.connect(self.openFile)
         self.ui.buttonSave.clicked.connect(self.saveFile)
         self.ui.buttonAnalyse.clicked.connect(self.analyseCode)
+        self.ui.buttonStop.clicked.connect(self.stopAnalysis)
         self.ui.buttonHelp.clicked.connect(self.displayHelp)
         self.ui.buttonAdd_1.clicked.connect(self.managePlot1)
         self.ui.buttonAdd_2.clicked.connect(self.managePlot2)
@@ -239,13 +243,29 @@ class SacatApp(QtWidgets.QMainWindow):
                            self.ui.tmaxLDoubleSpin.value(),)
 
         # create and connect the worker thread
-        worker = TestingControllerWorker(user_code, parametersTuple)
-        worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(self.thread_complete)
-        worker.signals.error.connect(self.showError)
-        worker.signals.progress.connect(self.updateProgressBar)
-        # worker.signals.progress.connect(self.progress_fn)
-        self.threadpool.start(worker)
+        mother_pipe, child_pipe = mp.Pipe()
+        self.signals = WorkerSignals()
+        self.assignSignals()
+
+        self.worker = TestingControllerWorker(user_code, parametersTuple, self.signals, child_pipe)
+        self.receiver_emitter = ReceiverEmitter(self.signals, mother_pipe)
+
+        self.ui.buttonStop.setEnabled(True)
+
+        self.threadpool.start(self.receiver_emitter)
+        self.threadpool.start(self.worker)
+
+    def assignSignals(self):
+        self.signals.result.connect(self.print_output)
+        self.signals.finished.connect(self.thread_complete)
+        self.signals.error.connect(self.showError)
+        self.signals.progress.connect(self.updateProgressBar)
+
+    @pyqtSlot()
+    def stopAnalysis(self):
+        if self.worker is not None or self.receiver_emitter is not None:
+            self.worker.stopProcess()
+            self.receiver_emitter.stop()
 
     def isAtLeastOneAnalysisChecked(self):
         return self.ui.timeCheckbox.isChecked() or self.ui.numOfOpCheckbox.isChecked() or self.ui.spaceCheckbox.isChecked()
@@ -263,6 +283,7 @@ class SacatApp(QtWidgets.QMainWindow):
         self._changeInputState(True)
         self.updateProgressBar((0, ""))
         self.ui.progressBar.setVisible(False)
+        self.ui.buttonStop.setEnabled(False)
         print("THREAD COMPLETE")
 
     def print_output(self, r):
