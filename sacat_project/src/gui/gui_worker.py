@@ -80,7 +80,7 @@ class ReceiverEmitter(QRunnable):
     def stop(self):
         self.running = False
 
-class ProcessTest(QObject, Process):
+class ProcessTest(Process):
     def __init__(self, user_code, parametersTuple, pipe):
         super(ProcessTest, self).__init__()
         self.pipe = pipe
