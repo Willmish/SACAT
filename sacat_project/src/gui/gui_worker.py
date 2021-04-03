@@ -30,6 +30,7 @@ class TestingControllerWorker(QRunnable):
         self.signals = signals
         # TODO may need to capture in try-catch block
         self.process = None
+        self.timeoutL = parametersTuple[10]
 
     def stopProcess(self):
         if self.process is not None:
@@ -41,7 +42,13 @@ class TestingControllerWorker(QRunnable):
     def run(self):
         self.process = ProcessTest(self.user_code, self.parametersTuple, self.pipe)
         self.process.start()
-        self.process.join()
+        self.process.join(timeout=self.timeoutL)
+
+        if self.process is not None:
+            if self.process.is_alive():
+                self.stopProcess()
+                self.signals.error.emit("The time limit has been reached!")
+
         self.process = None
         self.signals.finished.emit()
 
