@@ -174,6 +174,12 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.tmaxLLabel.setEnabled(activate)
         self.ui.tmaxLDoubleSpin.setEnabled(activate)
         self.ui.codeEditor.setEnabled(activate)
+        self.ui.comboBox_mode_1.setEnabled(activate)
+        self.ui.comboBox_mode_2.setEnabled(activate)
+        self.ui.comboBox_group_1.setEnabled(activate)
+        self.ui.comboBox_group_2.setEnabled(activate)
+        self.ui.buttonAdd_1.setEnabled(activate)
+        self.ui.buttonAdd_2.setEnabled(activate)
 
     @pyqtSlot()
     def openFile(self):
@@ -368,6 +374,16 @@ class SacatApp(QtWidgets.QMainWindow):
             return
         # Get the sender: buttonAdd_1 or buttonAdd_2 or ""
         sender = self.sender().objectName()
+
+        # Default plots after Analyse
+        if sender == "":
+            # if more than 1 mode available, set second graph mode to the next possible one
+            if self.ui.comboBox_mode_2.count() > 1:
+                self.ui.comboBox_mode_2.setCurrentIndex(self.ui.comboBox_mode_1.currentIndex()+1)
+            # if 1 mode available and more than 1 group, set second graph group to the next possible one
+            elif self.ui.comboBox_mode_2.count() == 1 and self.ui.comboBox_group_2.count() > 1:
+                self.ui.comboBox_group_2.setCurrentIndex(self.ui.comboBox_group_1.currentIndex()+1)
+
         # Get User Graph Settings
         groups = ["random", "duplicates", "sorted", "reversed"]
         graph_1_mode = self.ui.comboBox_mode_1.currentText()
@@ -385,6 +401,17 @@ class SacatApp(QtWidgets.QMainWindow):
         if sender == "buttonAdd_2" or sender == "":  # lowerPlot
             self.changePlot(graph_2_group, graph_2_mode, self.lowerPlot, self.ui.comboBox_group_2.currentText(),
                             fit=fit_2)
+        # If graph opened in seperate window, raise it
+        try:
+            if self.graphWindowUpper.isVisible() and (sender == "buttonAdd_1" or sender == ""):
+                self.graphWindowUpper.raise_()
+        except AttributeError:
+            pass
+        try:
+            if self.graphWindowLower.isVisible() and (sender == "buttonAdd_2" or sender == ""):
+                self.graphWindowLower.raise_()
+        except AttributeError:
+            pass
 
     def changePlot(self, group, mode, graph, group_name, fit):
         # Check mode
@@ -404,6 +431,14 @@ class SacatApp(QtWidgets.QMainWindow):
         """Clears plotObject: either upperPlot or lowerPlot"""
         plotObject.axes.clear()
         plotObject.draw()
+        # If graph opened in seperate window, raise it
+        try:
+            if plotObject is self.upperPlot and self.graphWindowUpper.isVisible():
+                self.graphWindowUpper.raise_()
+            if plotObject is self.lowerPlot and self.graphWindowLower.isVisible():
+                self.graphWindowLower.raise_()
+        except AttributeError: # graphWindow doesn't exist, don't set focus
+            pass
 
     def pickPlotColor(self, plotObject):
         """Color picker for a given plotObject"""
@@ -415,6 +450,7 @@ class SacatApp(QtWidgets.QMainWindow):
     def manageUpperGraphWindow(self):
         if self.sender().isChecked():
             self.graphWindowUpper = GraphWindow()
+            self.graphWindowUpper.setWindowTitle("Upper Graph")
             self.graphWindowUpper.resize(500, 400)
             self.graphWindowUpper.setMinimumSize(500, 400)
             self.newLayoutUpper = QtWidgets.QVBoxLayout()
@@ -430,6 +466,7 @@ class SacatApp(QtWidgets.QMainWindow):
     def manageLowerGraphWindow(self):
         if self.sender().isChecked():
             self.graphWindowLower = GraphWindow()
+            self.graphWindowLower.setWindowTitle("Lower Graph")
             self.graphWindowLower.resize(500, 400)
             self.graphWindowLower.setMinimumSize(500, 400)
             self.newLayoutLower = QtWidgets.QVBoxLayout()
