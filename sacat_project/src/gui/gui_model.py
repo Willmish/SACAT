@@ -106,10 +106,14 @@ class SacatApp(QtWidgets.QMainWindow):
     def _setDefaults(self):
         self.ui.progressBar.setVisible(False)
         self.ui.label_2.setText("SACAT v." + settings.get("VERSION"))
-        self.ui.tmaxSDoubleSpin.setMinimum(settings.get("T_SMALL_MIN"))
-        self.ui.tmaxSDoubleSpin.setMaximum(settings.get("T_SMALL_MAX"))
-        self.ui.tmaxSDoubleSpin.setValue(settings.get("T_SMALL_DEFAULT"))
-        self.ui.tmaxLDoubleSpin.setSingleStep(settings.get("T_SMALL_STEP"))
+        self.ui.testcountSpin.setMinimum(settings.get("TEST_COUNT_MIN"))
+        self.ui.testcountSpin.setMaximum(settings.get("TEST_COUNT_MAX"))
+        self.ui.testcountSpin.setSingleStep(settings.get("TEST_COUNT_STEP"))
+        self.ui.testcountSpin.setValue(settings.get("TEST_COUNT_DEFAULT"))
+        self.ui.stepSpin.setMinimum(settings.get("TEST_STEP_MIN"))
+        self.ui.stepSpin.setMaximum(settings.get("TEST_STEP_MAX"))
+        self.ui.stepSpin.setSingleStep(settings.get("TEST_STEP_STEP"))
+        self.ui.stepSpin.setValue(settings.get("TEST_STEP_DEFAULT"))
         self.ui.tmaxLDoubleSpin.setMinimum(settings.get("T_LARGE_MIN"))
         self.ui.tmaxLDoubleSpin.setMaximum(settings.get("T_LARGE_MAX"))
         self.ui.tmaxLDoubleSpin.setValue(settings.get("T_LARGE_DEFAULT"))
@@ -140,6 +144,8 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.buttonColor_2.clicked.connect(lambda: self.pickPlotColor(self.lowerPlot))
         self.ui.buttonUpperGraph.clicked.connect(self.manageUpperGraphWindow)
         self.ui.buttonLowerGraph.clicked.connect(self.manageLowerGraphWindow)
+        self.ui.radioButton.toggled.connect(lambda: self.allowTimeLimit(True))
+        self.ui.radioButton_2.toggled.connect(lambda: self.allowTimeLimit(False))
 
     def _createMatplotlibCanvas(self):
         """
@@ -173,8 +179,6 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.duplicatesCheckbox.setEnabled(activate)
         self.ui.sortedCheckbox.setEnabled(activate)
         self.ui.reversedCheckbox.setEnabled(activate)
-        self.ui.tmaxSLabel.setEnabled(activate)
-        self.ui.tmaxSDoubleSpin.setEnabled(activate)
         self.ui.tmaxLLabel.setEnabled(activate)
         self.ui.tmaxLDoubleSpin.setEnabled(activate)
         self.ui.codeEditor.setEnabled(activate)
@@ -184,6 +188,8 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.comboBox_group_2.setEnabled(activate)
         self.ui.buttonAdd_1.setEnabled(activate)
         self.ui.buttonAdd_2.setEnabled(activate)
+        self.ui.radioButton.setEnabled(activate)
+        self.ui.radioButton_2.setEnabled(activate)
 
     @pyqtSlot()
     def openFile(self):
@@ -224,7 +230,7 @@ class SacatApp(QtWidgets.QMainWindow):
     @pyqtSlot()
     def analyseCode(self):
         self.testNumber += 1
-        self.ui.plainTextEdit_2.appendPlainText(f"RUN {self.testNumber}\n")
+        self.ui.infoTextEdit.appendPlainText(f"RUN {self.testNumber}\n")
         self.r = None
         """Gets called when 'Analyse' button is clicked"""
         # Check if user input is valid
@@ -248,7 +254,7 @@ class SacatApp(QtWidgets.QMainWindow):
                            self.ui.duplicatesCheckbox.isChecked(),
                            self.ui.sortedCheckbox.isChecked(),
                            self.ui.reversedCheckbox.isChecked(),
-                           self.ui.tmaxSDoubleSpin.value(),
+                           None,
                            self.ui.tmaxLDoubleSpin.value(),)
 
         # Create and connect the worker thread
@@ -359,19 +365,19 @@ class SacatApp(QtWidgets.QMainWindow):
         self.updateProgressBar((0, ""))
         self.ui.progressBar.setVisible(False)
         self.ui.buttonStop.setEnabled(False)
-        print(runningTime)
-        self.ui.plainTextEdit.appendPlainText(f"RUN {self.testNumber}\n")
-        self.ui.plainTextEdit.appendPlainText("Running time: " + "{:.2f}".format(runningTime))
+        #print(runningTime)
+        self.ui.logsTextEdit.appendPlainText(f"RUN {self.testNumber}\n")
+        self.ui.logsTextEdit.appendPlainText("Running time: " + "{:.2f}".format(runningTime))
         if self.r is None:
-            self.ui.plainTextEdit_2.appendPlainText("No output :(")
-            self.ui.plainTextEdit_2.appendPlainText("-----------------------------------------------\n")
-            self.ui.plainTextEdit.appendPlainText("Test unsuccessful.")
+            self.ui.infoTextEdit.appendPlainText("No output :(")
+            self.ui.infoTextEdit.appendPlainText("-----------------------------------------------\n")
+            self.ui.logsTextEdit.appendPlainText("Test unsuccessful.")
         else:
-            self.ui.plainTextEdit.appendPlainText("Test successful.")
+            self.ui.logsTextEdit.appendPlainText("Test successful.")
 
 
 
-        self.ui.plainTextEdit.appendPlainText("-----------------------------------------------\n")
+        self.ui.logsTextEdit.appendPlainText("-----------------------------------------------\n")
         print("THREAD COMPLETE")
 
     def saveAndDisplayResults(self, r):
@@ -390,16 +396,20 @@ class SacatApp(QtWidgets.QMainWindow):
 
     def show_info(self):
         if self.r is not None:
-            # self.ui.plainTextEdit_2.clear()
+            # self.ui.infoTextEdit.clear()
             info = ""
             for res in self.r:
-                info += f"Test type: {res.test_type} \n"
-                info += f"Time complexity based on time: {res.times_results[0]} \n"
-                info += f"Time complexity based on operations: {res.operations_results[0]} \n"
-                info += f"Most common operation: {res.most_common_operation} \n"
-                info += f"Space complexity: {res.space_results[0]} \n"
-            self.ui.plainTextEdit_2.appendPlainText(info)
-            self.ui.plainTextEdit_2.appendPlainText("-----------------------------------------------\n")
+                if res is not None:
+                    info += f"Test type: {res.test_type} \n"
+                    if res.times_results is not None:
+                        info += f"Time complexity based on time: {res.times_results[0]} \n"
+                    if res.operations_results is not None:
+                        info += f"Time complexity based on operations: {res.operations_results[0]} \n"
+                    info += f"Most common operation: {res.most_common_operation} \n"
+                    if res.space_results is not None:
+                        info += f"Space complexity: {res.space_results[0]} \n"
+            self.ui.infoTextEdit.appendPlainText(info)
+            self.ui.infoTextEdit.appendPlainText("-----------------------------------------------\n")
 
     def managePlot(self):
         """
@@ -532,6 +542,10 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.plotLayoutLower.addWidget(self.lowerNavToolbar)
         self.lowerPlot.resize(400, 500)
         self.ui.plotLayoutLower.addWidget(self.lowerPlot)
+
+    def allowTimeLimit(self, bool):
+        self.ui.tmaxLLabel.setEnabled(bool)
+        self.ui.tmaxLDoubleSpin.setEnabled(bool)
 
     def manageTable(self):
         # TODO: think how to display the data
