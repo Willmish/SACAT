@@ -1,27 +1,61 @@
-import random
-import os.path
-import time
-import multiprocessing as mp
-
 # Other files
 from gui_settings import settings
 from gui_view import Ui_MainWindow
+from gui_worker import TestingControllerWorker, ReceiverEmitter, WorkerSignals
 
-# External Libraries
+# Python Standard Library
+import os.path
+import multiprocessing as mp
+
+# PyQt5
 from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtWidgets import QMessageBox, QDockWidget, QMdiArea, QMdiSubWindow
-from PyQt5.QtCore import pyqtSlot, Qt, QRunnable, QThreadPool, QObject, pyqtSignal
+from PyQt5.QtCore import Qt, QThreadPool, QObject, pyqtSlot, pyqtSignal
 
 # Matplotlib
 import matplotlib
-
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
-from gui_worker import TestingControllerWorker, ReceiverEmitter, WorkerSignals
+
+# Stylesheet
 import qdarkgraystyle
 
+# GRAPH WINDOW WIDGET
+class Event(QObject):
+    closeWidget = pyqtSignal()
+
+class GraphWindow(QtWidgets.QWidget):
+
+    def __init__(self, *args, **kwargs):
+        super(GraphWindow, self).__init__(*args, **kwargs)
+        self.signal = Event()
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        if a0.Close:
+            self.signal.closeWidget.emit()
+
+# TABLEVIEW WIDGET
+class TableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data):
+        super(TableModel, self).__init__()
+        self._data = data
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            # See below for the nested-list data structure.
+            # .row() indexes into the outer list,
+            # .column() indexes into the sub-list
+            return self._data[index.row()][index.column()]
+
+    def rowCount(self, index):
+        # The length of the outer list.
+        return len(self._data)
+
+    def columnCount(self, index):
+        # The following takes the first sub-list, and returns
+        # the length (only works if all rows are an equal length)
+        return len(self._data[0])
 
 # MATPLOTLIB WIDGET
 # Reference: https://pyshine.com/How-to-make-a-GUI-using-PyQt5-and-Matplotlib-to-plot-real-....
@@ -31,7 +65,7 @@ class MplCanvas(FigureCanvas):
 
         self.axes = self.fig.add_subplot(111)
         super(MplCanvas, self).__init__(self.fig)
-        self.color = "#00FF00"
+        self.color = settings.get("DEFAULT_PLOT_COLOR")
 
     def setColor(self, color):
         self.color = color
@@ -52,15 +86,18 @@ class SacatApp(QtWidgets.QMainWindow):
 
         # Configuration
         self._setDefaults()
-        self._createMatplotlibCanvas()
         self._connectButtons()
-        self.showMaximized()
+        self._createMatplotlibCanvas()
         self.setStyleSheet(qdarkgraystyle.load_stylesheet_pyqt5())
         self.ui.codeEditor.setStyleSheet("background-color: rgb(255,255,255); color: rgb(0,0,0)")
+
         # Threadpool for worker computations
         self.threadpool = QThreadPool()
         self.worker = None
         self.receiver_emitter = None
+
+        # Show
+        self.showMaximized()
 
     def _setDefaults(self):
         self.ui.progressBar.setVisible(False)
@@ -68,11 +105,17 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.tmaxSDoubleSpin.setMinimum(settings.get("T_SMALL_MIN"))
         self.ui.tmaxSDoubleSpin.setMaximum(settings.get("T_SMALL_MAX"))
         self.ui.tmaxSDoubleSpin.setValue(settings.get("T_SMALL_DEFAULT"))
-        self.ui.tmaxLDoubleSpin.setSingleStep(0.5)
+        self.ui.tmaxLDoubleSpin.setSingleStep(settings.get("T_SMALL_STEP"))
         self.ui.tmaxLDoubleSpin.setMinimum(settings.get("T_LARGE_MIN"))
         self.ui.tmaxLDoubleSpin.setMaximum(settings.get("T_LARGE_MAX"))
         self.ui.tmaxLDoubleSpin.setValue(settings.get("T_LARGE_DEFAULT"))
-        self.ui.tmaxLDoubleSpin.setSingleStep(settings.get("T_LARGE_INC"))
+        self.ui.tmaxLDoubleSpin.setSingleStep(settings.get("T_LARGE_STEP"))
+        self.ui.buttonColor_1.setStyleSheet(f"background-color: {settings.get('DEFAULT_PLOT_COLOR')}")
+        self.ui.buttonColor_2.setStyleSheet(f"background-color: {settings.get('DEFAULT_PLOT_COLOR')}")
+        self.ui.buttonUpperGraph.setStyleSheet(f"background-color: white")
+        self.ui.buttonLowerGraph.setStyleSheet(f"background-color: white")
+        self.ui.buttonClear_1.setStyleSheet(f"background-color: white")
+        self.ui.buttonClear_2.setStyleSheet(f"background-color: white")
         self.ui.comboBox_mode_1.clear()
         self.ui.comboBox_group_1.clear()
         self.ui.comboBox_mode_2.clear()
@@ -85,68 +128,56 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.buttonAnalyse.clicked.connect(self.analyseCode)
         self.ui.buttonStop.clicked.connect(self.stopAnalysis)
         self.ui.buttonHelp.clicked.connect(self.displayHelp)
-        self.ui.buttonAdd_1.clicked.connect(self.managePlot1)
-        self.ui.buttonAdd_2.clicked.connect(self.managePlot2)
-        self.ui.buttonClear_1.clicked.connect(self.clearUpperPlot)
-        self.ui.buttonClear_2.clicked.connect(self.clearLowerPlot)
-        self.ui.buttonColor_1.clicked.connect(self.pickColor_1)
-        self.ui.buttonColor_2.clicked.connect(self.pickColor_2)
+        self.ui.buttonAdd_1.clicked.connect(self.managePlot)
+        self.ui.buttonAdd_2.clicked.connect(self.managePlot)
+        self.ui.buttonClear_1.clicked.connect(lambda: self.clearPlot(self.upperPlot))
+        self.ui.buttonClear_2.clicked.connect(lambda: self.clearPlot(self.lowerPlot))
+        self.ui.buttonColor_1.clicked.connect(lambda: self.pickPlotColor(self.upperPlot))
+        self.ui.buttonColor_2.clicked.connect(lambda: self.pickPlotColor(self.lowerPlot))
+        self.ui.buttonUpperGraph.clicked.connect(self.manageUpperGraphWindow)
+        self.ui.buttonLowerGraph.clicked.connect(self.manageLowerGraphWindow)
 
     def _createMatplotlibCanvas(self):
-        # Create the matplotlib FigureCanvas object,
-        # which defines a single set of axes as self.axes.
+        """
+        Create the matplotlib FigureCanvas object
+        which defines a single set of axes as self.axes
+        """
         self.upperPlot = MplCanvas(self, width=5, height=5, dpi=100)
         self.lowerPlot = MplCanvas(self, width=5, height=5, dpi=100)
-        self.ui.plot_layout.addWidget(NavigationToolbar2QT(self.upperPlot, self))
-        self.ui.plot_layout.addWidget(self.upperPlot)
-        self.ui.plot_layout.addWidget(NavigationToolbar2QT(self.lowerPlot, self))
-        self.ui.plot_layout.addWidget(self.lowerPlot)
-        # self.upperPlot.axes.axis([0,10,0,10])
-        # self.upperPlot.axes.text(4, 5, 'GRAPH 1', fontsize=32)
-        # self.lowerPlot.axes.axis([0, 10, 0, 10])
-        # self.lowerPlot.axes.text(4, 5, 'GRAPH 2', fontsize=32)
+        self.upperNavToolbar = NavigationToolbar2QT(self.upperPlot, self)
+        self.lowerNavToolbar = NavigationToolbar2QT(self.lowerPlot, self)
+        self.upperNavToolbar.setStyleSheet("QToolButton { background-color: #ffffff; }")
+        self.lowerNavToolbar.setStyleSheet("QToolButton { background-color: #ffffff; }")
+        self.ui.plotLayoutUpper.addWidget(self.upperNavToolbar)
+        self.ui.plotLayoutUpper.addWidget(self.upperPlot)
+        self.ui.plotLayoutLower.addWidget(self.lowerNavToolbar)
+        self.ui.plotLayoutLower.addWidget(self.lowerPlot)
 
     def _changeInputState(self, activate: bool):
-        """all the input elements get blocked or unblocked depending on activate"""
+        """All the input elements get blocked or unblocked depending on activate"""
         self.ui.buttonOpen.setEnabled(activate)
         self.ui.buttonSave.setEnabled(activate)
         self.ui.buttonAnalyse.setEnabled(activate)
         self.ui.timeCheckbox.setEnabled(activate)
         self.ui.numOfOpCheckbox.setEnabled(activate)
         self.ui.spaceCheckbox.setEnabled(activate)
+        self.ui.label_6.setEnabled(activate)
+        self.ui.testcountSpin.setEnabled(activate)
+        self.ui.label_7.setEnabled(activate)
+        self.ui.stepSpin.setEnabled(activate)
+        self.ui.randomCheckbox.setEnabled(activate)
+        self.ui.duplicatesCheckbox.setEnabled(activate)
+        self.ui.sortedCheckbox.setEnabled(activate)
+        self.ui.reversedCheckbox.setEnabled(activate)
+        self.ui.tmaxSLabel.setEnabled(activate)
         self.ui.tmaxSDoubleSpin.setEnabled(activate)
+        self.ui.tmaxLLabel.setEnabled(activate)
         self.ui.tmaxLDoubleSpin.setEnabled(activate)
         self.ui.codeEditor.setEnabled(activate)
 
-    def showErrorMessage(self, title, text, information=None, details=None):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setWindowTitle(title)
-        msg.setText(text)
-        if information:
-            msg.setInformativeText(information)
-        if details:
-            msg.setDetailedText(details)
-        msg.exec_()
-
-    def updateProgressBar(self, valueAndText):
-        self.ui.progressBar.setVisible(True)
-        if valueAndText[0] < 100:
-            self.ui.progressBar.setValue(valueAndText[0])
-            self.ui.progressBar.setFormat(valueAndText[1])
-
-    def updatePlot(self, plotObject, xdata, ydata, group_name):
-        """plotObject is either self.upperPlot or self.lowerPlot for now"""
-        # plotObject.axes.clear()
-        plotObject.axes.scatter(xdata, ydata, color=plotObject.color, label=group_name)
-        if plotObject.axes.get_legend() is not None:
-            plotObject.axes.get_legend().remove()
-        plotObject.axes.legend()
-        plotObject.draw()
-
-
     @pyqtSlot()
     def openFile(self):
+        """Gets called when 'Open' button is clicked"""
         try:
             sacat_project_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
             name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open code file", sacat_project_path, "*.py")
@@ -162,6 +193,7 @@ class SacatApp(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def saveFile(self):
+        """Gets called when 'Save' button is clicked"""
         try:
             data = self.ui.codeEditor.toPlainText()
             sacat_project_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -181,25 +213,99 @@ class SacatApp(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def analyseCode(self):
-        # Checking for valid user settings
+        """Gets called when 'Analyse' button is clicked"""
+        # Check if user input is valid
+        if not(self.isValidUserInput()):
+            return
+        # Start progressbar
+        self.ui.progressBar.setVisible(True)
+        self.updateProgressBar((1, "Starting..."))
+        # Block input elements
+        self._changeInputState(False)
+        # Graph Tab
+        self.configureGraphTab()
+        # Get user input
+        user_code = self.ui.codeEditor.toPlainText()
+        parametersTuple = (self.ui.timeCheckbox.isChecked(),
+                           self.ui.numOfOpCheckbox.isChecked(),
+                           self.ui.spaceCheckbox.isChecked(),
+                           self.ui.testcountSpin.value(),
+                           self.ui.stepSpin.value(),
+                           self.ui.randomCheckbox.isChecked(),
+                           self.ui.duplicatesCheckbox.isChecked(),
+                           self.ui.sortedCheckbox.isChecked(),
+                           self.ui.reversedCheckbox.isChecked(),
+                           self.ui.tmaxSDoubleSpin.value(),
+                           self.ui.tmaxLDoubleSpin.value(),)
+
+        # Create and connect the worker thread
+        mother_pipe, child_pipe = mp.Pipe()
+        self.signals = WorkerSignals()
+        self.assignSignals()
+
+        self.worker = TestingControllerWorker(user_code, parametersTuple, self.signals, child_pipe)
+        self.receiver_emitter = ReceiverEmitter(self.signals, mother_pipe)
+
+        self.ui.buttonStop.setEnabled(True)
+
+        self.threadpool.start(self.receiver_emitter)
+        self.threadpool.start(self.worker)
+
+    @pyqtSlot()
+    def stopAnalysis(self):
+        if self.worker is not None or self.receiver_emitter is not None:
+            self.worker.stopProcess()
+            self.receiver_emitter.stop()
+
+    @pyqtSlot()
+    def displayHelp(self):
+        pass
+
+    def updateProgressBar(self, valueAndText):
+        self.ui.progressBar.setVisible(True)
+        if valueAndText[0] < 100:
+            self.ui.progressBar.setValue(valueAndText[0])
+            self.ui.progressBar.setFormat(valueAndText[1])
+
+    def updatePlot(self, plotObject, xdata, ydata, group_name, y_pred=None):
+        """plotObject is either self.upperPlot or self.lowerPlot for now"""
+        plotObject.axes.scatter(xdata, ydata, color=plotObject.color, label=group_name)
+        if y_pred is not None:
+            plotObject.axes.plot(xdata, y_pred, color=plotObject.color)
+        if plotObject.axes.get_legend() is not None:
+            plotObject.axes.get_legend().remove()
+        plotObject.axes.legend()
+        plotObject.draw()
+
+    def isValidUserInput(self):
         if not (self.isAtLeastOneAnalysisChecked()):
             self.showErrorMessage("NO OPTION CHOSEN",
                                   "You MUST choose at least one of the three given \n"
                                   "methods in \"Analyses\" Groupbox")
-            return
+            return False
 
         if not (self.isAtLeastOneTestGroupChecked()):
             self.showErrorMessage("NO TESTGROUP CHOSEN",
                                   "You MUST choose at least one of the four given \n"
                                   "test groups in \"Testing\" Groupbox")
-            return
+            return False
+        return True
 
-        # Graph Tab
+    def isAtLeastOneAnalysisChecked(self) -> bool:
+        return self.ui.timeCheckbox.isChecked() or self.ui.numOfOpCheckbox.isChecked() or self.ui.spaceCheckbox.isChecked()
+
+    def isAtLeastOneTestGroupChecked(self) -> bool:
+        a = self.ui.randomCheckbox.isChecked() or self.ui.duplicatesCheckbox.isChecked()
+        b = self.ui.sortedCheckbox.isChecked() or self.ui.reversedCheckbox.isChecked()
+        return a or b
+
+    def configureGraphTab(self):
+        # Clear graphs and combo boxes
         self.upperPlot.axes.clear()
         self.lowerPlot.axes.clear()
-
         self.ui.comboBox_mode_1.clear()
         self.ui.comboBox_mode_2.clear()
+        # Add options to combo boxes based on user input
         if self.ui.timeCheckbox.isChecked():
             self.ui.comboBox_mode_1.addItem("Time analysis")
             self.ui.comboBox_mode_2.addItem("Time analysis")
@@ -224,69 +330,20 @@ class SacatApp(QtWidgets.QMainWindow):
             self.ui.comboBox_group_1.addItem("reversed")
             self.ui.comboBox_group_2.addItem("reversed")
 
-        # Start
-        self.updateProgressBar((1, "Starting..."))  # just an indicator
-        # block input elements
-        self._changeInputState(False)
-        # get user input
-        user_code = self.ui.codeEditor.toPlainText()
-        parametersTuple = (self.ui.timeCheckbox.isChecked(),
-                           self.ui.numOfOpCheckbox.isChecked(),
-                           self.ui.spaceCheckbox.isChecked(),
-                           self.ui.testcountSpin.value(),
-                           self.ui.stepSpin.value(),
-                           self.ui.randomCheckbox.isChecked(),
-                           self.ui.duplicatesCheckbox.isChecked(),
-                           self.ui.sortedCheckbox.isChecked(),
-                           self.ui.reversedCheckbox.isChecked(),
-                           self.ui.tmaxSDoubleSpin.value(),
-                           self.ui.tmaxLDoubleSpin.value(),)
-
-        # create and connect the worker thread
-        mother_pipe, child_pipe = mp.Pipe()
-        self.signals = WorkerSignals()
-        self.assignSignals()
-
-        self.worker = TestingControllerWorker(user_code, parametersTuple, self.signals, child_pipe)
-        self.receiver_emitter = ReceiverEmitter(self.signals, mother_pipe)
-
-        self.ui.buttonStop.setEnabled(True)
-
-        self.threadpool.start(self.receiver_emitter)
-        self.threadpool.start(self.worker)
-
     def assignSignals(self):
-        self.signals.result.connect(self.print_output)
-        self.signals.finished.connect(self.thread_complete)
+        self.signals.result.connect(self.saveAndDisplayResults)
+        self.signals.finished.connect(self.threadComplete)
         self.signals.error.connect(self.showError)
         self.signals.progress.connect(self.updateProgressBar)
 
-    @pyqtSlot()
-    def stopAnalysis(self):
-        if self.worker is not None or self.receiver_emitter is not None:
-            self.worker.stopProcess()
-            self.receiver_emitter.stop()
-
-    def isAtLeastOneAnalysisChecked(self):
-        return self.ui.timeCheckbox.isChecked() or self.ui.numOfOpCheckbox.isChecked() or self.ui.spaceCheckbox.isChecked()
-
-    def isAtLeastOneTestGroupChecked(self):
-        a = self.ui.randomCheckbox.isChecked() or self.ui.duplicatesCheckbox.isChecked()
-        b = self.ui.sortedCheckbox.isChecked() or self.ui.reversedCheckbox.isChecked()
-        return a or b
-
-    @pyqtSlot()
-    def displayHelp(self):
-        pass
-
-    def thread_complete(self):
+    def threadComplete(self):
         self._changeInputState(True)
         self.updateProgressBar((0, ""))
         self.ui.progressBar.setVisible(False)
         self.ui.buttonStop.setEnabled(False)
         print("THREAD COMPLETE")
 
-    def print_output(self, r):
+    def saveAndDisplayResults(self, r):
         """r is a Result-class object"""
         # Save last results, overwrite if necessary
         self.r = r
@@ -296,71 +353,141 @@ class SacatApp(QtWidgets.QMainWindow):
         #     self.ui.plainTextEdit_2.insertPlainText(f"Best  fit {result.times_results}")
         # [random, duplicates, sorted, reversed]
         # Manage graphs
-        self.managePlots()
-        # print(r)
+        self.managePlot()
 
-    def managePlots(self, g1=True, g2=True):
+    def managePlot(self):
+        """
+        Plots the results according to the sender:
+            buttonAdd_1 : change upperPlot
+            buttonAdd_2 : change lowerPlot
+            ""          : means calling from analyseCode, change both plots
+        """
+        # Check if results exist
         if self.r is None:
-            self.showErrorMessage("ERROR: NO DATA", "No results data exist, run Analysis firstly")
+            self.showErrorMessage("ERROR: NO DATA", "No results exist, click 'Analyse' to get results")
             return
+        # Get the sender: buttonAdd_1 or buttonAdd_2 or ""
+        sender = self.sender().objectName()
+        # Get User Graph Settings
         groups = ["random", "duplicates", "sorted", "reversed"]
-        # modes = ["Time analysis", "Number of operations analysis", "Space analysis"]
         graph_1_mode = self.ui.comboBox_mode_1.currentText()
         graph_2_mode = self.ui.comboBox_mode_2.currentText()
-        graph_1_group = self.r[groups.index(self.ui.comboBox_group_1.currentText())]
-        graph_2_group = self.r[groups.index(self.ui.comboBox_group_2.currentText())]
-        if g1 == True:
-            self.changePlot(graph_1_group, graph_1_mode, self.upperPlot, self.ui.comboBox_group_1.currentText())  # graph 1
-        if g2 == True:
-            self.changePlot(graph_2_group, graph_2_mode, self.lowerPlot, self.ui.comboBox_group_2.currentText())  # graph 2
+        group_1_text = self.ui.comboBox_group_1.currentText()
+        group_2_text = self.ui.comboBox_group_2.currentText()
+        graph_1_group = self.r[groups.index(group_1_text)]
+        graph_2_group = self.r[groups.index(group_2_text)]
+        fit_1 = self.ui.checkBoxFit_1.isChecked()
+        fit_2 = self.ui.checkBoxFit_2.isChecked()
+        # Change plot
+        if sender == "buttonAdd_1" or sender == "":  # upperPlot
+            self.changePlot(graph_1_group, graph_1_mode, self.upperPlot, self.ui.comboBox_group_1.currentText(),
+                            fit=fit_1)
+        if sender == "buttonAdd_2" or sender == "":  # lowerPlot
+            self.changePlot(graph_2_group, graph_2_mode, self.lowerPlot, self.ui.comboBox_group_2.currentText(),
+                            fit=fit_2)
 
-    def managePlot1(self):
-        self.managePlots(True, False)
-
-    def managePlot2(self):
-        self.managePlots(False, True)
-
-    def changePlot(self, group, mode, graph, group_name):
+    def changePlot(self, group, mode, graph, group_name, fit):
+        # Check mode
         if mode == "Time analysis":
             bestfit, coefs, y_pred, y, sizes = group.times_results
         elif mode == "Number of operations analysis":
             bestfit, coefs, y_pred, y, sizes = group.operations_results
         else:  # Space analysis
             bestfit, coefs, y_pred, y, sizes = group.space_results
-        self.updatePlot(graph, sizes, y, group_name)
+        # Update plot
+        if fit: # if fitted curve checked
+            self.updatePlot(graph, sizes, y, group_name, y_pred)
+        else:
+            self.updatePlot(graph, sizes, y, group_name)
 
-    def clearUpperPlot(self):
-        self.upperPlot.axes.clear()
-        self.upperPlot.draw()
-        # self.updatePlot(self.upperPlot, [], [])
+    def clearPlot(self, plotObject):
+        """Clears plotObject: either upperPlot or lowerPlot"""
+        plotObject.axes.clear()
+        plotObject.draw()
 
-    def clearLowerPlot(self):
-        self.lowerPlot.axes.clear()
-        self.lowerPlot.draw()
-        # self.updatePlot(self.lowerPlot, [], [])
-
-    def pickColor_1(self):
+    def pickPlotColor(self, plotObject):
+        """Color picker for a given plotObject"""
         color = QtWidgets.QColorDialog.getColor()
-
         if color.isValid():
-            self.ui.buttonColor_1.setStyleSheet(f"background-color: {color.name()}")
-            # self.upperPlot.axes.set_facecolor("blue")
-            self.upperPlot.setColor(color.name())
+            self.sender().setStyleSheet(f"background-color: {color.name()}")
+            plotObject.setColor(color.name())
 
-    def pickColor_2(self):
-        color = QtWidgets.QColorDialog.getColor()
+    def manageUpperGraphWindow(self):
+        if self.sender().isChecked():
+            self.graphWindowUpper = GraphWindow()
+            self.graphWindowUpper.resize(500, 400)
+            self.graphWindowUpper.setMinimumSize(500, 400)
+            self.newLayoutUpper = QtWidgets.QVBoxLayout()
+            self.newLayoutUpper.addWidget(self.upperNavToolbar)
+            self.newLayoutUpper.addWidget(self.upperPlot)
+            self.graphWindowUpper.setLayout(self.newLayoutUpper)
+            self.graphWindowUpper.signal.closeWidget.connect(lambda: self.putUpperPlotInApp(True))
+            self.graphWindowUpper.show()
+        else:
+            self.graphWindowUpper.destroy()
+            self.putUpperPlotInApp()
 
-        if color.isValid():
-            self.ui.buttonColor_2.setStyleSheet(f"background-color: {color.name()}")
-            self.lowerPlot.setColor(color.name())
-            # self.lowerPlot.axes.set_facecolor("blue")
+    def manageLowerGraphWindow(self):
+        if self.sender().isChecked():
+            self.graphWindowLower = GraphWindow()
+            self.graphWindowLower.resize(500, 400)
+            self.graphWindowLower.setMinimumSize(500, 400)
+            self.newLayoutLower = QtWidgets.QVBoxLayout()
+            self.newLayoutLower.addWidget(self.lowerNavToolbar)
+            self.newLayoutLower.addWidget(self.lowerPlot)
+            self.graphWindowLower.setLayout(self.newLayoutLower)
+            self.graphWindowLower.signal.closeWidget.connect(lambda: self.putLowerPlotInApp(True))
+            self.graphWindowLower.show()
+        else:
+            self.graphWindowLower.destroy()
+            self.putLowerPlotInApp()
+
+    def putUpperPlotInApp(self,doToggle=False):
+        if doToggle:
+            self.ui.buttonUpperGraph.toggle()
+        self.ui.plotLayoutUpper.addWidget(self.upperNavToolbar)
+        self.upperPlot.resize(400, 500)
+        self.ui.plotLayoutUpper.addWidget(self.upperPlot)
+
+    def putLowerPlotInApp(self, doToggle=False):
+        if doToggle:
+            self.ui.buttonLowerGraph.toggle()
+        self.ui.plotLayoutLower.addWidget(self.lowerNavToolbar)
+        self.lowerPlot.resize(400, 500)
+        self.ui.plotLayoutLower.addWidget(self.lowerPlot)
+
+    def manageTable(self):
+        # TODO: think how to display the data
+        data = []
+        for r0 in self.r:
+            aux = [r0.times_results, r0.operations_results, r0.space_results]
+            for a in aux:
+                data.append([r0.test_type, r0.most_common_operation, a[0],  a])
+            # print(r0.most_common_operation)
+            # print(r0.operations_results)
+        self.table = QtWidgets.QTableView()
+        # data = [
+        #     [4,1,2],
+        #     [1,0,0],
+        #     [3,5,0],
+        #     [3,7,7],
+        #     [9,9,8],
+        # ]
+        self.model = TableModel(data)
+        self.table.setModel(self.model)
+        #self.table.
+        self.ui.verticalLayout_5.addWidget(self.table)
+
+    def showErrorMessage(self, title, text, information=None, details=None):
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Critical)
+        msg.setWindowTitle(title)
+        msg.setText(text)
+        if information:
+            msg.setInformativeText(information)
+        if details:
+            msg.setDetailedText(details)
+        msg.exec_()
 
     def showError(self, s):
         self.showErrorMessage("ERROR", str(s))
-
-# if __name__ == '__main__':
-#     app = QtWidgets.QApplication([])
-#     # app.setAttribute(QtCore.Qt.AA_Use96Dpi)
-#     window = BioreactorApp()
-#     window.show()
-#     app.exec_()
