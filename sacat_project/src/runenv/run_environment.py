@@ -114,7 +114,7 @@ class RunEnvironment():
 
     def __update_progress(self, test_count, test_name):
         self.current_test_state += 1
-        current_state = int(100 * (self.current_test_state / self.num_all_tests) / 2)
+        current_state = int(80 * (self.current_test_state / self.num_all_tests))
         # self.__signals.progress.emit((current_state, "Testing in progress... (" + str(test_name) + " " + str(test_count) + "/" + str(self.max_tests) + ")"))
         if self.__pipe is not None:
             self.__pipe.send((0, (current_state, "Testing in progress... (" + str(test_name) + " " + str(test_count)\

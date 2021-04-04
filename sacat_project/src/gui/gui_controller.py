@@ -2,7 +2,7 @@
 SACAT
 Sorting Algorithm Complexity Analyser Tool
 """
-
+import sys
 from gui_model import *
 
 if __name__ == '__main__':
@@ -12,3 +12,4 @@ if __name__ == '__main__':
     window = SacatApp()
     window.show()
     app.exec_()
+    sys.exit()

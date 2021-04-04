@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSlot, QRunnable, QObject, pyqtSignal
+from PyQt5.QtCore import pyqtSlot, QRunnable, QObject, pyqtSignal, QThread
 import time, os
 from src.testcontroller.test_controller import TestingController
 from src.data_analysis.data_analyser import DataAnalyser
@@ -8,12 +8,12 @@ from src.data_analysis.results_storage import ResultsStorage
 
 # https://www.learnpyqt.com/tutorials/multithreading-pyqt-applications-qthreadpool/
 class WorkerSignals(QObject):
-    finished = pyqtSignal()
+    finished = pyqtSignal(object)
     result = pyqtSignal(object)
     error = pyqtSignal(object)
     progress = pyqtSignal(tuple)
 
-class TestingControllerWorker(QRunnable):
+class TestingControllerWorker(QThread):
     """
     Worker "thread"
 
@@ -31,15 +31,25 @@ class TestingControllerWorker(QRunnable):
         # TODO may need to capture in try-catch block
         self.process = None
         self.timeoutL = parametersTuple[10]
+        self.startTime = None
+
+    def startTimer(self):
+        self.startTime = time.time()
+
+    def endTimer(self):
+        return time.time() - self.startTime
 
     def stopProcess(self):
         if self.process is not None:
             self.process.deleteFiles()
+            self.process.terminate()
             self.process.kill()
             self.process = None
 
     @pyqtSlot()
     def run(self):
+        self.startTimer()
+
         self.process = ProcessTest(self.user_code, self.parametersTuple, self.pipe)
         self.process.start()
         self.process.join(timeout=self.timeoutL)
@@ -50,10 +60,10 @@ class TestingControllerWorker(QRunnable):
                 self.signals.error.emit("The time limit has been reached!")
 
         self.process = None
-        self.signals.finished.emit()
+        self.signals.finished.emit(self.endTimer())
 
 
-class ReceiverEmitter(QRunnable):
+class ReceiverEmitter(QThread):
     def __init__(self, signals, pipe):
         super(ReceiverEmitter, self).__init__()
         self.signals = signals
@@ -121,9 +131,9 @@ class ProcessTest(Process):
         try:
             self.pipe.send((0, (10, "Testing code started...")))
             tested_data = self.testing_controller.run_full(self.pipe)
-            self.pipe.send((0, (50, "Testing code finished...")))
-            time.sleep(1)
-            self.pipe.send((0, (60, "Analyzing data...")))
+            self.pipe.send((0, (80, "Testing code finished...")))
+            # time.sleep(1)
+            self.pipe.send((0, (85, "Analyzing data...")))
 
             self.data_analyser = DataAnalyser(tested_data)
             results = self.data_analyser.full_data_analysis()

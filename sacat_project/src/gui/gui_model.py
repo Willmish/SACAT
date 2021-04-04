@@ -80,6 +80,7 @@ class SacatApp(QtWidgets.QMainWindow):
         super().__init__(*args, **kwargs)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.ui.closeEvent = self.closeEvent
 
         # Internal result saver
         self.r = None
@@ -92,12 +93,15 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.codeEditor.setStyleSheet("background-color: rgb(255,255,255); color: rgb(0,0,0)")
 
         # Threadpool for worker computations
-        self.threadpool = QThreadPool()
+        # self.threadpool = QThreadPool()
         self.worker = None
         self.receiver_emitter = None
-
+        self.testNumber = 0
         # Show
         self.showMaximized()
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.stopAnalysis()
 
     def _setDefaults(self):
         self.ui.progressBar.setVisible(False)
@@ -186,7 +190,7 @@ class SacatApp(QtWidgets.QMainWindow):
                 data = f.read()
                 f.close()
                 self.ui.codeEditor.clear()
-                self.ui.codeEditor.insertPlainText(data)
+                self.ui.codeEditor.appendPlainText(data)
                 self.ui.fileNameLabel.setText(os.path.basename(name))
         except Exception as e:
             raise (Exception(f"File could not be opened: {e}"))
@@ -213,6 +217,9 @@ class SacatApp(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def analyseCode(self):
+        self.testNumber += 1
+        self.ui.plainTextEdit_2.appendPlainText(f"RUN {self.testNumber}\n")
+        self.r = None
         """Gets called when 'Analyse' button is clicked"""
         # Check if user input is valid
         if not(self.isValidUserInput()):
@@ -248,13 +255,17 @@ class SacatApp(QtWidgets.QMainWindow):
 
         self.ui.buttonStop.setEnabled(True)
 
-        self.threadpool.start(self.receiver_emitter)
-        self.threadpool.start(self.worker)
+        self.receiver_emitter.start()
+        self.worker.start()
+
 
     @pyqtSlot()
     def stopAnalysis(self):
-        if self.worker is not None or self.receiver_emitter is not None:
+        # self.ui.plainTextEdit_2.clear()
+
+        if self.worker is not None:
             self.worker.stopProcess()
+        if self.receiver_emitter is not None:
             self.receiver_emitter.stop()
 
     @pyqtSlot()
@@ -266,6 +277,7 @@ class SacatApp(QtWidgets.QMainWindow):
         if valueAndText[0] < 100:
             self.ui.progressBar.setValue(valueAndText[0])
             self.ui.progressBar.setFormat(valueAndText[1])
+
 
     def updatePlot(self, plotObject, xdata, ydata, group_name, y_pred=None):
         """plotObject is either self.upperPlot or self.lowerPlot for now"""
@@ -336,11 +348,24 @@ class SacatApp(QtWidgets.QMainWindow):
         self.signals.error.connect(self.showError)
         self.signals.progress.connect(self.updateProgressBar)
 
-    def threadComplete(self):
+    def threadComplete(self, runningTime):
         self._changeInputState(True)
         self.updateProgressBar((0, ""))
         self.ui.progressBar.setVisible(False)
         self.ui.buttonStop.setEnabled(False)
+        print(runningTime)
+        self.ui.plainTextEdit.appendPlainText(f"RUN {self.testNumber}\n")
+        self.ui.plainTextEdit.appendPlainText("Running time: " + "{:.2f}".format(runningTime))
+        if self.r is None:
+            self.ui.plainTextEdit_2.appendPlainText("No output :(")
+            self.ui.plainTextEdit_2.appendPlainText("-----------------------------------------------\n")
+            self.ui.plainTextEdit.appendPlainText("Test unsuccessful.")
+        else:
+            self.ui.plainTextEdit.appendPlainText("Test successful.")
+
+
+
+        self.ui.plainTextEdit.appendPlainText("-----------------------------------------------\n")
         print("THREAD COMPLETE")
 
     def saveAndDisplayResults(self, r):
@@ -353,7 +378,22 @@ class SacatApp(QtWidgets.QMainWindow):
         #     self.ui.plainTextEdit_2.insertPlainText(f"Best  fit {result.times_results}")
         # [random, duplicates, sorted, reversed]
         # Manage graphs
+        self.show_info()
         self.managePlot()
+        self.receiver_emitter.stop()
+
+    def show_info(self):
+        if self.r is not None:
+            # self.ui.plainTextEdit_2.clear()
+            info = ""
+            for res in self.r:
+                info += f"Test type: {res.test_type} \n"
+                info += f"Time complexity based on time: {res.times_results[0]} \n"
+                info += f"Time complexity based on operations: {res.operations_results[0]} \n"
+                info += f"Most common operation: {res.most_common_operation} \n"
+                info += f"Space complexity: {res.space_results[0]} \n"
+            self.ui.plainTextEdit_2.appendPlainText(info)
+            self.ui.plainTextEdit_2.appendPlainText("-----------------------------------------------\n")
 
     def managePlot(self):
         """
