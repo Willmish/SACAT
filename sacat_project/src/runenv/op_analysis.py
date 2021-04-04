@@ -34,7 +34,10 @@ class OpAnalyzer(SortTest):
             self.__parsedModule.lines_dict[k] = 0
 
     def analyse(self, lst):
-        outputs = self.executeAlgorithm(lst)
+        try:
+            outputs = self.executeAlgorithm(lst)
+        except Exception as e:
+            raise Exception("User code exception: " + str(e))
         if not self._is_sorted(outputs, lst):
             # raise SortedError(self.__test_name, lst)
             print("Not sorted")

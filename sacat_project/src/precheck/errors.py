@@ -3,3 +3,6 @@ class RestrictedCodeError(Exception):
         self.restrictedElement = restrictedElement
         self.message = message
         super().__init__(self.message, self.restrictedElement)
+
+    def __str__(self):
+        return self.message + ": " + str(self.restrictedElement)

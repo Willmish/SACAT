@@ -32,7 +32,10 @@ class TimeAnalyser(SortTest):
         self.__sorting_module = sorting_module
 
     def analyse(self, lst):
-        outputs, run_time = self._single_test(self.__sorting_module.mySort, lst)
+        try:
+            outputs, run_time = self._single_test(self.__sorting_module.mySort, lst)
+        except Exception as e:
+            raise Exception("User code exception: " + str(e))
 
         if not self._is_sorted(outputs, lst):
             # raise SortedError(self.__test_name, lst)

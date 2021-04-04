@@ -13,7 +13,11 @@ class SpaceAnalyzer(SortTest):
         tm.clear_traces()
         tm.start()
         random.shuffle(lst)
-        output = self.__sorting_module.mySort(lst)
+        try:
+            output = self.__sorting_module.mySort(lst)
+        except Exception as e:
+            raise Exception("User code exception: " + str(e))
+
         _, peak = tm.get_traced_memory()
         if not self._is_sorted(output, lst):
             # raise SortedError(self.__test_name, lst)

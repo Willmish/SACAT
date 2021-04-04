@@ -15,6 +15,6 @@ fileTo = "./../res/output/merge_sort_edited.py"
 
 # Restricted functions/keywords
 
-safety_restricted_funcs = ["compile", "dir", "eval", "exec", "globals", 'input', 'print', 'open']
+safety_restricted_funcs = ["compile", "dir", "eval", "exec", "globals", 'input', 'open']
 other_restricted_funcs = ["enumerate", "filter", 'iter', 'map', 'next', 'sorted', 'zip']
 safety_restricted_keywords = ["import"]
