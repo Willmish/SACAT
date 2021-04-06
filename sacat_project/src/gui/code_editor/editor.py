@@ -9,7 +9,7 @@ __license__ = "License:BSD 3Clause"
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from code_editor import syntax
+from src.gui.code_editor import syntax
 
 
 class LineNumberArea(QWidget):

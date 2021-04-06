@@ -1,7 +1,7 @@
 from src.precheck.errors import RestrictedCodeError
-from src.settings import safety_restricted_funcs
-from src.settings import other_restricted_funcs
-from src.settings import safety_restricted_keywords
+from settings import safety_restricted_funcs
+from settings import other_restricted_funcs
+from settings import safety_restricted_keywords
 
 import re
 

@@ -4,6 +4,7 @@ from src.testcontroller.test_controller import TestingController
 from src.data_analysis.data_analyser import DataAnalyser
 from multiprocessing import Process, Pipe, Queue
 from src.data_analysis.results_storage import ResultsStorage
+import settings
 
 
 # https://www.learnpyqt.com/tutorials/multithreading-pyqt-applications-qthreadpool/
@@ -12,6 +13,7 @@ class WorkerSignals(QObject):
     result = pyqtSignal(object)
     error = pyqtSignal(object)
     progress = pyqtSignal(tuple)
+
 
 class TestingControllerWorker(QThread):
     """
@@ -102,14 +104,15 @@ class ReceiverEmitter(QThread):
     def stop(self):
         self.running = False
 
+
 class ProcessTest(Process):
     def __init__(self, user_code, parametersTuple, pipe):
         super(ProcessTest, self).__init__()
         self.pipe = pipe
         self.user_code = user_code
         self.parametersTuple = parametersTuple
-        self.user_code_path = "../../res/input/.mySort.py"
-        self.user_code_edited_path = "../../res/input/.mySort_edited.py"
+        self.user_code_path = settings.fileFrom
+        self.user_code_edited_path = settings.fileTo
         self.saveUserCode()
         # TODO may need to capture in try-catch block
         self.testing_controller = TestingController(self.user_code_path, self.user_code_edited_path, self.parametersTuple)

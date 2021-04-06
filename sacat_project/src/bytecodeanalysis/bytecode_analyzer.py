@@ -1,7 +1,7 @@
 import dis
 import types
 
-from src.settings import DEBUG
+from settings import DEBUG
 
 
 class BytecodeAnalyzer:

@@ -1,7 +1,7 @@
 # Other files
-from gui_settings import settings
-from gui_view import Ui_MainWindow
-from gui_worker import TestingControllerWorker, ReceiverEmitter, WorkerSignals
+from src.gui.gui_settings import settings
+from src.gui.gui_view import Ui_MainWindow
+from src.gui.gui_worker import TestingControllerWorker, ReceiverEmitter, WorkerSignals
 
 # Python Standard Library
 import os.path
@@ -375,10 +375,8 @@ class SacatApp(QtWidgets.QMainWindow):
         else:
             self.ui.logsTextEdit.appendPlainText("Test successful.")
 
-
-
         self.ui.logsTextEdit.appendPlainText("-----------------------------------------------\n")
-        print("THREAD COMPLETE")
+        # print("THREAD COMPLETE")
 
     def saveAndDisplayResults(self, r):
         """r is a Result-class object"""
@@ -529,7 +527,7 @@ class SacatApp(QtWidgets.QMainWindow):
             self.graphWindowLower.destroy()
             self.putLowerPlotInApp()
 
-    def putUpperPlotInApp(self,doToggle=False):
+    def putUpperPlotInApp(self, doToggle=False):
         if doToggle:
             self.ui.buttonUpperGraph.toggle()
         self.ui.plotLayoutUpper.addWidget(self.upperNavToolbar)
@@ -557,16 +555,8 @@ class SacatApp(QtWidgets.QMainWindow):
             # print(r0.most_common_operation)
             # print(r0.operations_results)
         self.table = QtWidgets.QTableView()
-        # data = [
-        #     [4,1,2],
-        #     [1,0,0],
-        #     [3,5,0],
-        #     [3,7,7],
-        #     [9,9,8],
-        # ]
         self.model = TableModel(data)
         self.table.setModel(self.model)
-        #self.table.
         self.ui.verticalLayout_5.addWidget(self.table)
 
     def showErrorMessage(self, title, text, information=None, details=None):

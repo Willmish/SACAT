@@ -63,9 +63,3 @@ class PreTest(SortTest):
         #     return f"passed all tests in {run_time} s"
         # else:
         #     return f"failed the following tests: {failed}"
-
-
-# if __name__ == "__main__":
-#     pre_test = PreTest()
-#     print(pre_test.run(MergeSort.merge_sort))
-#     print(pre_test.run(FakeSort.fake_sort))

@@ -3,15 +3,13 @@ import importlib.util
 from src.bytecodeanalysis.bytecode_analyzer import BytecodeAnalyzer
 from src.parser.parser import Parser
 from src.precheck.user_code import UserCode
-from src.precheck.errors import RestrictedCodeError
 from src.pretest.pre_tests import PreTest
 from src.runenv.run_environment import RunEnvironment
-from src.settings import *
 
 
 class TestingController:
     def __init__(self, user_code_path, user_code_edited_path, parametersTuple):
-        #(time_analysis: bool, numofop_analisys: bool, space_analysis: bool, testcount: int, step: int, random : bool,
+        # (time_analysis: bool, numofop_analisys: bool, space_analysis: bool, testcount: int, step: int, random : bool,
         # duplicates: bool, sorted: bool, reversed: bool, tmax: int, Tmax: int)
         self.__unparsedModule = None
         self.__parsedModule = None
@@ -30,11 +28,7 @@ class TestingController:
 
     @staticmethod
     def checkCode(uc):
-        # try:
         uc.checkForRestricted()
-        # except RestrictedCodeError as e:
-        #     print(e.message, ':', e.restrictedElement)
-        #     return
 
     def preTest(self):
         pre_test = PreTest(self.__unparsedModule)

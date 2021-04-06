@@ -9,7 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from code_editor.editor import CodeEditor
+from src.gui.code_editor.editor import CodeEditor
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
