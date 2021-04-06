@@ -254,7 +254,7 @@ class SacatApp(QtWidgets.QMainWindow):
                            self.ui.duplicatesCheckbox.isChecked(),
                            self.ui.sortedCheckbox.isChecked(),
                            self.ui.reversedCheckbox.isChecked(),
-                           None,
+                           self.ui.radioButton_2.isChecked(),
                            self.ui.tmaxLDoubleSpin.value(),)
 
         # Create and connect the worker thread

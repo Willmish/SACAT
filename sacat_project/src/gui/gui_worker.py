@@ -28,15 +28,15 @@ class TestingControllerWorker(QThread):
         self.parametersTuple = parametersTuple
         self.pipe = pipe
         self.signals = signals
-        # TODO may need to capture in try-catch block
+
         self.process = None
-        self.timeoutL = parametersTuple[10]
+        self.timeoutL = None
         self.startTime = None
 
-    def startTimer(self):
+    def startLocalTimer(self):
         self.startTime = time.time()
 
-    def endTimer(self):
+    def endLocalTimer(self):
         return time.time() - self.startTime
 
     def stopProcess(self):
@@ -46,9 +46,14 @@ class TestingControllerWorker(QThread):
             self.process.kill()
             self.process = None
 
+    def setTimeout(self):
+        if self.parametersTuple[9] is False:
+            self.timeoutL = self.parametersTuple[10]
+
     @pyqtSlot()
     def run(self):
-        self.startTimer()
+        self.setTimeout()
+        self.startLocalTimer()
 
         self.process = ProcessTest(self.user_code, self.parametersTuple, self.pipe)
         self.process.start()
@@ -60,7 +65,7 @@ class TestingControllerWorker(QThread):
                 self.signals.error.emit("The time limit has been reached!")
 
         self.process = None
-        self.signals.finished.emit(self.endTimer())
+        self.signals.finished.emit(self.endLocalTimer())
 
 
 class ReceiverEmitter(QThread):
