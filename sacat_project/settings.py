@@ -3,8 +3,8 @@
 
 DEBUG = False
 
-fileFrom = "./res/temp/.sort.py"
-fileTo = "./res/temp/.sort_edited.py"
+fileFrom = "./res/input/.sort.py"
+fileTo = "./res/input/.sort_edited.py"
 
 safety_restricted_funcs = ["compile", "dir", "eval", "exec", "globals", 'input', 'open']
 other_restricted_funcs = ["enumerate", "filter", 'iter', 'map', 'next', 'sorted', 'zip']
