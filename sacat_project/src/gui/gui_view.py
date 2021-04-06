@@ -75,7 +75,7 @@ class Ui_MainWindow(object):
         self.buttonStop.setObjectName("buttonStop")
         self.horizontalLayout_3.addWidget(self.buttonStop)
         self.buttonHelp = QtWidgets.QPushButton(self.centralwidget)
-        self.buttonHelp.setEnabled(False)
+        self.buttonHelp.setEnabled(True)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.buttonHelp.setFont(font)

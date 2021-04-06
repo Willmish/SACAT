@@ -35,28 +35,6 @@ class GraphWindow(QtWidgets.QWidget):
         if a0.Close:
             self.signal.closeWidget.emit()
 
-# TABLEVIEW WIDGET
-class TableModel(QtCore.QAbstractTableModel):
-    def __init__(self, data):
-        super(TableModel, self).__init__()
-        self._data = data
-
-    def data(self, index, role):
-        if role == Qt.DisplayRole:
-            # See below for the nested-list data structure.
-            # .row() indexes into the outer list,
-            # .column() indexes into the sub-list
-            return self._data[index.row()][index.column()]
-
-    def rowCount(self, index):
-        # The length of the outer list.
-        return len(self._data)
-
-    def columnCount(self, index):
-        # The following takes the first sub-list, and returns
-        # the length (only works if all rows are an equal length)
-        return len(self._data[0])
-
 # MATPLOTLIB WIDGET
 # Reference: https://pyshine.com/How-to-make-a-GUI-using-PyQt5-and-Matplotlib-to-plot-real-....
 class MplCanvas(FigureCanvas):
@@ -135,7 +113,7 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.buttonSave.clicked.connect(self.saveFile)
         self.ui.buttonAnalyse.clicked.connect(self.analyseCode)
         self.ui.buttonStop.clicked.connect(self.stopAnalysis)
-        self.ui.buttonHelp.clicked.connect(self.displayHelp)
+        self.ui.buttonHelp.clicked.connect(self.showHelp)
         self.ui.buttonAdd_1.clicked.connect(self.managePlot)
         self.ui.buttonAdd_2.clicked.connect(self.managePlot)
         self.ui.buttonClear_1.clicked.connect(lambda: self.clearPlot(self.upperPlot))
@@ -383,12 +361,8 @@ class SacatApp(QtWidgets.QMainWindow):
         # Save last results, overwrite if necessary
         self.r = r
         # Display information
-        # for result in r:
-        #     self.ui.plainTextEdit_2.insertPlainText(f"Test type {result.test_type}")
-        #     self.ui.plainTextEdit_2.insertPlainText(f"Best  fit {result.times_results}")
-        # [random, duplicates, sorted, reversed]
-        # Manage graphs
         self.show_info()
+        # Manage graphs
         self.managePlot()
         self.receiver_emitter.stop()
 
@@ -545,20 +519,6 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.tmaxLLabel.setEnabled(bool)
         self.ui.tmaxLDoubleSpin.setEnabled(bool)
 
-    def manageTable(self):
-        # TODO: think how to display the data
-        data = []
-        for r0 in self.r:
-            aux = [r0.times_results, r0.operations_results, r0.space_results]
-            for a in aux:
-                data.append([r0.test_type, r0.most_common_operation, a[0],  a])
-            # print(r0.most_common_operation)
-            # print(r0.operations_results)
-        self.table = QtWidgets.QTableView()
-        self.model = TableModel(data)
-        self.table.setModel(self.model)
-        self.ui.verticalLayout_5.addWidget(self.table)
-
     def showErrorMessage(self, title, text, information=None, details=None):
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Critical)
@@ -572,3 +532,59 @@ class SacatApp(QtWidgets.QMainWindow):
 
     def showError(self, s):
         self.showErrorMessage("ERROR", str(s))
+
+    def showHelp(self):
+        try:
+            self.widget = QtWidgets.QWidget()
+            self.widget.setMinimumSize(800, 800)
+            #self.widget.setFixedSize(800, 700) # TODO: set fixed size when finished help text
+            self.widget.setWindowTitle("Help")
+            layout1 = QtWidgets.QHBoxLayout()
+            layout1.setAlignment(Qt.AlignTop)
+            layout1.setContentsMargins(20, 10, 20, 10)
+            self.widget.setLayout(layout1)
+            label = QtWidgets.QLabel()
+            label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+            label.setOpenExternalLinks(True)
+            label.setStyleSheet("QLabel {background-color: white;padding: 10px 30px 20px 30px;}")
+            infoText = """
+            <style>
+              h1 {text-align: center}
+              li, div {font-size:16px}
+            </style>
+            <h1> HELP </h1>
+            <h2>Starting an analysis</h2>
+            <ol>
+                <li> Write your code in the text editor on the left, inside of a function called mySort which returns a sorted array. </li>
+                <li> Select what types of Analysis you want to perform (Time complexity: based on time, based on no of operations, Space complexity) </li>
+                <li> Choose number of tests per each test type, choose step (by how much the array increases in size). </li>
+                <li> Choose which types of test to perform (Random (arrays with random integers), Duplicates (random integers in a small range), 
+                Sorted (pre sorted arrays) and Reversed (arrays sorted in descending order).</li>
+                <li> Choose upper time limit for the Analysis (or select none). (The program will automatically pause if time limit reached) </li>
+                <li> Press Analyse at the top of the screen to begin the analysis. </li>
+                <li> At any time you can press Stop to pause the execution of the program. </li>
+            </ol>
+            <h2>Viewing the results</h2>
+            <ol>
+                <li> You can use open and save buttons at the top of the screen to Open an existing python file 
+                or save the current program (as a python file). </li>
+                <li> Info section on the right: Contains output information from each run of the analysis. 
+                (Time complexity achieved, Most common Operation, Space complexity estimated) </li>
+                <li> Chart Section (on the right)
+                <ol>
+                    <li>There are 2 empty graphs which can be "popped out" using <img src="src/gui/graphics/maximize.ico" width="20" height="20"></li>
+                    <li>The graphs can be cleared using <img src="src/gui/graphics/rubber.ico" width="20" height="20"> button 
+                    and new graphs can be added with "Add" button</li>
+                    <li>For each graph to be added, select the type of analysis result, type of test, 
+                    whether to show the fitted curve or not and the colour.</li>
+                </ol>
+            </ol>
+            <h2> About </h2>
+            <div>Icons made by <a href="https://icons8.com" title="Icons8">Icons8</a></div>
+            """
+            label.setWordWrap(True)
+            label.setText(infoText)
+            layout1.addWidget(label)
+            self.widget.show()
+        except Exception as e:
+            self.showErrorMessage("ERROR", str(e))
