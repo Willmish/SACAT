@@ -5,7 +5,7 @@ from src.parser.parser import Parser
 from src.precheck.user_code import UserCode
 from src.pretest.pre_tests import PreTest
 from src.runenv.run_environment import RunEnvironment
-
+from settings import *
 
 class TestingController:
     def __init__(self, user_code_path, user_code_edited_path, parametersTuple):
@@ -38,7 +38,7 @@ class TestingController:
             raise Exception("User code exception: " + str(e))
 
         if len(failed) != 0:
-            print("Some tests failed!")  # TMP
+            # print("Some tests failed!")  # TMP
             raise Exception("User code does not sort properly! Failed tests:" + str(failed))
             # return
 
