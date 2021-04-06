@@ -202,7 +202,6 @@ class DataAnalyser:
 
         if most_likely_complexity == "n2":
             predicted_data = self.complexities[0][1][1].predict(np.array(quadratic_sizes).reshape(-1,1))
-            print(predicted_data)
             popt, _ = curve_fit(ObjectiveFunctions.quadratic_objective, self.sizes, predicted_data)
             if DEBUG_MODE:
                 a, b, c = popt
