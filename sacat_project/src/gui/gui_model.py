@@ -86,7 +86,7 @@ class SacatApp(QtWidgets.QMainWindow):
 
     def _setDefaults(self):
         self.ui.progressBar.setVisible(False)
-        self.ui.label_2.setText("SACAT v." + settings.get("VERSION"))
+        self.ui.label_2.setText("SACAT")
         self.ui.testcountSpin.setMinimum(settings.get("TEST_COUNT_MIN"))
         self.ui.testcountSpin.setMaximum(settings.get("TEST_COUNT_MAX"))
         self.ui.testcountSpin.setSingleStep(settings.get("TEST_COUNT_STEP"))
