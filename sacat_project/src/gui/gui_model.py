@@ -68,7 +68,7 @@ class SacatApp(QtWidgets.QMainWindow):
         self._connectButtons()
         self._createMatplotlibCanvas()
         self.setStyleSheet(qdarkgraystyle.load_stylesheet_pyqt5())
-        self.ui.codeEditor.setStyleSheet("background-color: rgb(255,255,255); color: rgb(0,0,0)")
+        self.ui.codeEditor.setStyleSheet(f"background-color: rgb(255,255,255); color: rgb(0,0,0);font-size: 16px")
 
         # Threadpool for worker computations
         # self.threadpool = QThreadPool()
@@ -77,6 +77,9 @@ class SacatApp(QtWidgets.QMainWindow):
         self.testNumber = 0
         # Show
         self.showMaximized()
+        self.ui.codeEditor.appendPlainText("def mySort(arr):\n"
+                                           "\t#Your code goes here\n"
+                                           "\treturn arr")
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.stopAnalysis()
