@@ -168,6 +168,9 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.buttonAdd_2.setEnabled(activate)
         self.ui.radioButton.setEnabled(activate)
         self.ui.radioButton_2.setEnabled(activate)
+        if activate and self.ui.radioButton_2.isChecked():
+            self.ui.tmaxLLabel.setEnabled(False)
+            self.ui.tmaxLDoubleSpin.setEnabled(False)
 
     @pyqtSlot()
     def openFile(self):
@@ -572,15 +575,19 @@ class SacatApp(QtWidgets.QMainWindow):
                 (Time complexity achieved, Most common Operation, Space complexity estimated) </li>
                 <li> Chart Section (on the right)
                 <ol>
-                    <li>There are 2 empty graphs which can be "popped out" using <img src="src/gui/graphics/maximize.ico" width="20" height="20"></li>
-                    <li>The graphs can be cleared using <img src="src/gui/graphics/rubber.ico" width="20" height="20"> button 
-                    and new graphs can be added with "Add" button</li>
+                    <li>There are 2 empty graphs which can be "popped out" using <img src="src/gui/graphics/maximize.ico" width="20" height="20"
+                    alt="maximize"></li>
+                    <li>The graphs can be cleared using <img src="src/gui/graphics/rubber.ico" width="20" height="20" alt="plus"> button 
+                    and new graphs can be added with <img src="src/gui/graphics/plus.ico" width="20" height="20" alt="rubber"> button</li>
                     <li>For each graph to be added, select the type of analysis result, type of test, 
                     whether to show the fitted curve or not and the colour.</li>
                 </ol>
             </ol>
             <h2> About </h2>
-            <div>Icons made by <a href="https://icons8.com" title="Icons8">Icons8</a></div>
+            <div>
+            Icons made by <a href="https://icons8.com" title="Icons8">Icons8</a> and 
+                          <a href="http://www.designcontest.com">DesignContest</a>
+            </div>
             """
             label.setWordWrap(True)
             label.setText(infoText)
