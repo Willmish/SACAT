@@ -19,3 +19,9 @@ In a terminal:
 - Run the program using `python3 run.py`.
 
 When no longer running the program, deactivate the virtual environment using the command `deactivate`.
+
+## With a virtual environment (For Windows systems)
+
+Follow the same istructions as above, but instead of using the alias `python3`, use `py`.
+
+Additioanlly the structure of the virtual environment will be different, so running the virtual environment will require this command: `venv\Scripts\activate.bat`.
