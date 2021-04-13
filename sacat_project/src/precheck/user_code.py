@@ -1,3 +1,9 @@
+"""
+User code class for storing and checking checking the user code for restricted keywords and methods.
+
+Written by Andrzej Szablewski, March 2021.
+"""
+
 from src.precheck.errors import RestrictedCodeError
 from settings import safety_restricted_funcs
 from settings import other_restricted_funcs

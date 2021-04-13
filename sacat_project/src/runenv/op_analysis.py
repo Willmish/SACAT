@@ -1,3 +1,9 @@
+"""
+Operation complexity analysis module.
+
+Written by Andrzej Szablewski, March 2021.
+"""
+
 from src.runenv.test_super import SortTest
 
 

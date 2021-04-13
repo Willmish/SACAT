@@ -1,3 +1,9 @@
+"""
+Running testing with communication between threads and processes.
+
+Written by Andrzej Szablewski and Bartosz Grabek, March 2021.
+"""
+
 from PyQt5.QtCore import pyqtSlot, QRunnable, QObject, pyqtSignal, QThread
 import time, os
 from src.testcontroller.test_controller import TestingController

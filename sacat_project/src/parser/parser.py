@@ -1,3 +1,9 @@
+"""
+Parser adds line markers for counting line executions.
+
+Written by Andrzej Szablewski, March 2021.
+"""
+
 import re
 
 

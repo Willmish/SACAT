@@ -1,3 +1,9 @@
+"""
+Space complexity analysis module.
+
+Written by Andrzej Szablewski, March 2021.
+"""
+
 import random
 import tracemalloc as tm
 

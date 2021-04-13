@@ -1,3 +1,9 @@
+"""
+Bytecode Analyzer checks what instructions are used in the user code.
+
+Written by Andrzej Szablewski, March 2021.
+"""
+
 import dis
 import types
 

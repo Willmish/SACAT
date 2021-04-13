@@ -1,3 +1,9 @@
+"""
+Errors for the user code check.
+
+Written by Andrzej Szablewski, March 2021.
+"""
+
 class RestrictedCodeError(Exception):
     def __init__(self, message, restrictedElement):
         self.restrictedElement = restrictedElement

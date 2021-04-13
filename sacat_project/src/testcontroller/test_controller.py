@@ -1,3 +1,9 @@
+"""
+Testing controller for running the testing sequence.
+
+Written by Andrzej Szablewski, March 2021.
+"""
+
 import importlib.util
 
 from src.bytecodeanalysis.bytecode_analyzer import BytecodeAnalyzer
@@ -6,6 +12,7 @@ from src.precheck.user_code import UserCode
 from src.pretest.pre_tests import PreTest
 from src.runenv.run_environment import RunEnvironment
 from settings import *
+
 
 class TestingController:
     def __init__(self, user_code_path, user_code_edited_path, parametersTuple):
