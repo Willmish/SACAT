@@ -1,3 +1,8 @@
+"""
+SACAT GUI - component connections, functions and Graph Windows
+
+Written by Bartosz Grabek, March 2021
+"""
 # Other files
 from src.gui.gui_settings import settings
 from src.gui.gui_view import Ui_MainWindow
@@ -80,6 +85,9 @@ class SacatApp(QtWidgets.QMainWindow):
         self.ui.codeEditor.appendPlainText("def mySort(arr):\n"
                                            "\t#Your code goes here\n"
                                            "\treturn arr")
+
+        self.ui.infoTextEdit.setStyleSheet("font-size: 16px")
+        self.ui.logsTextEdit.setStyleSheet("font-size: 16px")
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.stopAnalysis()

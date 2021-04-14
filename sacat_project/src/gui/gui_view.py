@@ -1,3 +1,9 @@
+"""
+Creating SACAT GUI Main Window view,
+generated from gui_28.ui created in QtDesigner.
+
+Design by Bartosz Grabek, March 2021
+"""
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'gui_28.ui'
